@@ -1,6 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const {sendGo} = require('../OTA/server')
+const {sendGo, testConnection,boards} = require('../OTA/server')
+
+router.get("/clients", ((req, res) => {
+    res.json(boards)
+}))
 
 /* GET home page. */
 router.get("/go", (req, res) => {
@@ -9,7 +13,12 @@ router.get("/go", (req, res) => {
 
   sendGo(address,port);
 
-  res.send("Going!")
+  res.send("Going!");
+})
+
+router.get("/test", (req, res) => {
+  testConnection();
+  res.send("test")
 })
 
 router.get("/file", function(req, res) {
