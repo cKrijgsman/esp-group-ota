@@ -16,10 +16,16 @@ const storage = multer.diskStorage({
 const upload = multer({storage: storage})
 
 
+/**
+ * Returns a list of all the connected clients.
+ */
 router.get("/clients", ((req, res) => {
   res.json(boards)
 }))
 
+/**
+ * Returns a list of al the previously uploaded files.
+ */
 router.get("/files", ((req, res) => {
   fs.readdir(`${__dirname}/../files/`, (err, files) => {
     if (err) {
@@ -31,6 +37,9 @@ router.get("/files", ((req, res) => {
   })
 }))
 
+/**
+ * Upload a file and sends the go to all the selected clients.
+ */
 router.post("/upload", upload.single("file"), (req, res) => {
   const group = req.body.group;
   const version = req.body.version;
@@ -41,6 +50,9 @@ router.post("/upload", upload.single("file"), (req, res) => {
   res.json({message: "DONE!"})
 });
 
+/**
+ * Uses and already uploaded file and sends the go to all the selected clients.
+ */
 router.post("/re-upload", upload.none(), (req, res) => {
   const group = req.body.group;
   const version = req.body.version;
@@ -66,6 +78,10 @@ function sendToClients(group, version) {
   }
 }
 
+/**
+ * Get the file.
+ * Called by the client when the need the file.
+ */
 router.get("/file/:version", function (req, res) {
   const fileName = (req.params.version) ? req.params.version : "test.bin"
   const file = `${__dirname}/../files/${fileName}.bin`;

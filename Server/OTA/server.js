@@ -3,7 +3,12 @@ const client = dgram.createSocket('udp4');
 
 const boards = {};
 
-// Send hello
+/**
+ * Sends the go command to the client.
+ * @param address - The IP address of the client.
+ * @param port - The port of the client.
+ * @param version - The version of the file that the client should request.
+ */
 function sendGo(address, port, version) {
   client.send(Buffer.from(`go|${version}`), port, address, (err) => {
     if (err)
@@ -16,8 +21,12 @@ client.on('error', (err) => {
   server.close();
 });
 
+/**
+ * Listens from the UDP messages send by the clients.
+ */
 client.on('message', (msg, rinfo) => {
   console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
+
   // register new board
   if (msg.indexOf("|") !== -1) {
     const data = msg.toString().split("|")
