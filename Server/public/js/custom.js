@@ -86,6 +86,8 @@ function updateGroups(clients) {
 function updateViews(clients) {
   const clientDiv = $("#clientList");
 
+  $("#connectedDevices").html(Object.values(clients).length)
+
   clientDiv.html("");
   for (let [key, value] of Object.entries(clients)) {
     clientDiv.append(`
