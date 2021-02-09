@@ -4,15 +4,8 @@ const client = dgram.createSocket('udp4');
 const boards = {};
 
 // Send hello
-function sendGo(address, port) {
-  client.send(Buffer.from("Go!"), port, address, (err) => {
-    if (err)
-      console.error(err)
-  })
-}
-
-function testConnection() {
-  client.send(Buffer.from("test|a|1"), 41234, "localhost", (err) => {
+function sendGo(address, port, version) {
+  client.send(Buffer.from(`go|${version}`), port, address, (err) => {
     if (err)
       console.error(err)
   })
@@ -28,12 +21,14 @@ client.on('message', (msg, rinfo) => {
   // register new board
   if (msg.indexOf("|") !== -1) {
     const data = msg.toString().split("|")
-    const name = data[0]
-    const group = data[1]
-    const version = data[2]
+    const mac = data[0].split(":").map((x) => Number(x).toString(16)).join(":");
+    const name = data[1];
+    const group = data[2];
+    const version = data[3];
 
     // TODO Check if board was already known
-    boards[name] = {
+    boards[mac] = {
+      name: name,
       group: group,
       version: version,
       address: rinfo.address,
@@ -49,4 +44,4 @@ client.on('listening', () => {
 
 client.bind(41234);
 
-module.exports = {sendGo, testConnection, boards};
+module.exports = {sendGo, boards};
