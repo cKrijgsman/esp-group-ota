@@ -1,5 +1,5 @@
 
-#include <WiFiNINA.h> //WIFI setup
+#include <WiFi.h> //WIFI setup
 #include <ArduinoHttpClient.h> //http download
 #include <AsyncUDP.h> //sending/receiving UDP packets (commands)
 #include <ArduinoOTA.h> // only for InternalStorage
@@ -19,7 +19,6 @@ const char MY_SSID[] = SECRET_SSID;
 const char MY_PASS[] = SECRET_PASS;
 
 WiFiClient    wifiClient;  // HTTP
-//WiFiSSLClient wifiClientSSL;  // HTTPS
 int status = WL_IDLE_STATUS;
 
 void handleSketchDownload() {
@@ -36,7 +35,6 @@ void handleSketchDownload() {
     previousMillis = currentMillis;
 
     HttpClient client(wifiClient, SERVER, PORT);  // HTTP
-    //HttpClient client(wifiClientSSL, SERVER, SERVER_PORT);  // HTTPS
 
     char buff[32];
     snprintf(buff, sizeof(buff), PATH, VERSION + 1);
@@ -102,14 +100,17 @@ void setup() {
     Serial.println(VERSION);
 
     Serial.println("Initialize WiFi");
-    // attempt to connect to Wifi network:
-    while (status != WL_CONNECTED) {
-        Serial.print("Attempting to connect to SSID: ");
-        Serial.println(MY_SSID);
-        // Connect to WPA/WPA2 network. Change this line if using open or WEP network:
-        status = WiFi.begin(MY_SSID, MY_PASS);
+    WiFi.begin(MY_SSID, MY_PASS);
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
     }
+
+    Serial.println("");
     Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
     //------------------------------------------ non OTA setup code --------------------------
 
     String builtString = String("victor|Birds|1");
