@@ -26,7 +26,7 @@ let groups = [];
     e.preventDefault();
   })
 
-  $("#startReUpload").on("click", (e) => {
+  $("#start-re-upload").on("click", (e) => {
     const version = $("#fileSelect").val()
     const g = $("#groupSelect").val();
 
@@ -36,7 +36,10 @@ let groups = [];
 
     fetch('/re-upload', {
       method: 'POST',
-      body: data
+      body: JSON.stringify({
+        version: version,
+        group: g
+      })
     }).then(res => res.json())
       .then(data => console.log(data))
 
@@ -55,8 +58,9 @@ let groups = [];
   // Get the client list on page load.
   const clients = await getClients();
   const files = await getFiles();
+  const alerts = await getAlerts();
 
-  updateViews(clients, files);
+  updateViews(clients, files, alerts);
 })(jQuery); // End of use strict
 
 /**
@@ -72,6 +76,13 @@ async function getClients() {
 
 async function getFiles() {
   const res = await fetch("/files", {
+    method: 'GET'
+  });
+  return res.json();
+}
+
+async function getAlerts() {
+  const res = await fetch("/alerts", {
     method: 'GET'
   });
   return res.json();
@@ -100,7 +111,7 @@ function updateGroups(clients) {
   groups = newGroups;
 
   if (updated) {
-    const groupSelect = $("#groupSelect", "#groupSelectReUpload")
+    const groupSelect = $("#groupSelect,#groupSelectReUpload")
     groupSelect.html("")
     groupSelect.append("<option value='all'>all</option>")
     for (let group of groups) {
@@ -114,8 +125,9 @@ function updateGroups(clients) {
  * Updates the client list view.
  * @param clients - List of clients that is present.
  * @param files - The list of previously uploaded files.
+ * @param alerts - The alerts generated on the server.
  */
-function updateViews(clients, files) {
+function updateViews(clients, files, alerts) {
 
   // Update the Client views
   if (typeof clients !== "undefined") {
@@ -147,6 +159,42 @@ function updateViews(clients, files) {
         file = String(file).split(".bin")[0];
         fileSelect.append(`<option value="${file}">${file}</option>`)
       }
+    }
+  }
+
+  if (typeof alerts !== "undefined") {
+    const alertBox = $("#alertBox")
+    for (let a of alerts) {
+      console.log(a);
+      let icon = '<div class="icon-circle bg-primary"><i class="fas fa-robot text-white"></i></div>'
+      if (a.type === "update") {
+        icon = '<div class="icon-circle bg-info"><i class="fas fa-pencil text-white"></i></div>'
+      } else if (a.type === "warning") {
+        icon = '<div class="icon-circle bg-warning"><i class="fas fa-warning text-white"></i></div>'
+      }
+
+      const currently = new Date(a.time);
+      const element = $(`<a class="dropdown-item d-flex align-items-center" href="#"></a>`);
+      element.append(`
+            <div class="mr-3">
+                ${icon}
+            </div>
+            <div>
+                <div class="small text-gray-500">${currently.getHours() + ":"
+                + currently.getMinutes() + ":"
+                + currently.getSeconds()}</div>
+                <span class="font-weight-bold">${a.message}</span>
+            </div>`)
+
+      element.on("click", () => {
+        fetch('/remove-alert', {
+          method: 'POST',
+          body: JSON.stringify({alertId: a.id})
+        })
+        element.remove();
+      });
+
+      alertBox.append(element)
     }
   }
 }

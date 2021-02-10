@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {sendGo, boards} = require('../OTA/server')
+const {sendGo, boards, alerts, clearAlert} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -38,6 +38,26 @@ router.get("/files", ((req, res) => {
 }))
 
 /**
+ * Send the alerts to the client.
+ */
+router.get("/alerts", ((req, res) => {
+  const newAlerts = []
+  for (let i = 0; i < alerts.length; i++) {
+    newAlerts.push(alerts[i])
+  }
+
+  res.json(newAlerts);
+}))
+
+router.post("/remove-alert", (req, res) => {
+  const alertId = req.body.alertId;
+
+  clearAlert(alertId);
+
+  res.send("alert removed.")
+})
+
+/**
  * Upload a file and sends the go to all the selected clients.
  */
 router.post("/upload", upload.single("file"), (req, res) => {
@@ -53,7 +73,7 @@ router.post("/upload", upload.single("file"), (req, res) => {
 /**
  * Uses and already uploaded file and sends the go to all the selected clients.
  */
-router.post("/re-upload", upload.none(), (req, res) => {
+router.post("/re-upload", (req, res) => {
   const group = req.body.group;
   const version = req.body.version;
 
@@ -73,7 +93,8 @@ function sendToClients(group, version) {
   const all = groups.includes("all");
   for (let client of Object.values(boards)) {
     if (all || groups.includes(client.group)) {
-      sendGo(client.address, client.port, version)
+      console.log(`Sending go to ${client.name}`)
+      sendGo(client.address, version)
     }
   }
 }
