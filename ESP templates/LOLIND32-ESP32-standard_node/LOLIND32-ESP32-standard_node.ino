@@ -9,15 +9,17 @@
 #define SECRET_SSID   "Ziggo9794608"
 #define SECRET_PASS   "r76Jfaxnhtje"
 //server setup
-#define SERVER_ID     "www.my-hostname.it"  // Set your correct hostname
+#define SERVER_ID     "192.168.178.73"  // Set your correct hostname
 #define SERVER_PATH   "/file/%s"            // Set the URI to the .bin firmware
-#define SERVER_PORT   80                    // Commonly 80 (HTTP) | 443 (HTTPS)
+#define SERVER_PORT   3000                    // Commonly 80 (HTTP) | 443 (HTTPS)
 #define UDP_BROADCAST_PORT  41234           // broadcast port number
 #define UDP_LISNEN_PORT     41222           // command receiving port
 
-char *NODE_NAME = "berta";
-char *NODE_GROUP = "koeien";
+char *NODE_NAME = "MrOwl";
+char *NODE_GROUP = "Birds";
 char *NODE_VERSION = SCRIPT_VERSION;
+
+String UPDATE_FILE;
 
 const char MY_SSID[] = SECRET_SSID;
 const char MY_PASS[] = SECRET_PASS;
@@ -74,60 +76,35 @@ void loop() {
         if ((WiFi.status() != WL_CONNECTED) && (CheckWiFiPossibility() == true)) {
             ConnectToWiFi();
             //timerAlarmEnable(timer1);
-            if(udp.listen(1234)) {
+            if(udp.listen(UDP_LISNEN_PORT)) {
+
                 Serial.print("UDP Listening on IP: ");
                 Serial.println(WiFi.localIP());
+
                 udp.onPacket([](AsyncUDPPacket packet) {
-                    Serial.print("UDP Packet Type: ");
-                    Serial.print(packet.isBroadcast()?"Broadcast":packet.isMulticast()?"Multicast":"Unicast");
-                    Serial.print(", From: ");
-                    Serial.print(packet.remoteIP());
-                    Serial.print(":");
-                    Serial.print(packet.remotePort());
-                    Serial.print(", To: ");
-                    Serial.print(packet.localIP());
-                    Serial.print(":");
-                    Serial.print(packet.localPort());
-                    Serial.print(", Length: ");
-                    Serial.print(packet.length());
-                    Serial.print(", Data: ");
                     Serial.write(packet.data(), packet.length());
                     Serial.println();
-                    //reply to the client
-                    packet.printf("Got %u bytes of data", packet.length());
+
+                    char* DATA = (char*) packet.data();
+                    String data_string = String(DATA);
+                    if (data_string.substring(0,3)=="go|"){
+                        UPDATE_FILE = data_string.substring(3);
+                        Serial.println(UPDATE_FILE);
+                        handleSketchDownload();
+                    }
+                    packet.flush();
+
                 });
             }
 
             broadcastToServer();
         }
     }
+
     Serial.print(" \n . ");
     delay(1000);
-    //handleSketchDownload();
-    //broadcastToServer();
-
 
     // add your normal loop code below ...
-}
-
-void onPacketCallBack(AsyncUDPPacket packet) {
-
-    Serial.print("UDP Packet Type: ");
-    Serial.print(packet.isBroadcast() ? "Broadcast" : packet.isMulticast() ? "Multicast" : "Unicast");
-    Serial.print(", From: ");
-    Serial.print(packet.remoteIP());
-    Serial.print(":");
-    Serial.print(packet.remotePort());
-    Serial.print(", To: ");
-    Serial.print(packet.localIP());
-    Serial.print(":");
-    Serial.print(packet.localPort());
-    Serial.print(", Length: ");
-    Serial.print(packet.length());
-    Serial.print(", Data: ");
-    Serial.write(packet.data(), packet.length());
-    packet.flush();
-
 
 }
 
@@ -170,7 +147,7 @@ void handleSketchDownload() {
     HttpClient client(wifiClient, SERVER, PORT);  // HTTP
 
     char buff[32];
-    snprintf(buff, sizeof(buff), PATH);
+    snprintf(buff, sizeof(buff), PATH, UPDATE_FILE);
 
     Serial.print("Check for update file ");
     Serial.println(buff);
