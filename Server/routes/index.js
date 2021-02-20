@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {sendGo, boards, alerts, clearAlert} = require('../OTA/server')
+const {sendGo, boards, alerts, clearAlert, setName, setGroup} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -21,6 +21,24 @@ const upload = multer({storage: storage})
  */
 router.get("/clients", ((req, res) => {
   res.json(boards)
+}))
+
+router.post("/name", ((req, res) => {
+  const client = req.body.client;
+  const name = req.body.name;
+
+  setName(boards[client].address, name);
+
+  res.send("Name set")
+}))
+
+router.post("/group", ((req, res) => {
+  const client = req.body.client;
+  const group = req.body.group;
+
+  setGroup(boards[client].address, group);
+
+  res.send("group set")
 }))
 
 /**
@@ -58,6 +76,21 @@ router.post("/remove-alert", (req, res) => {
 })
 
 /**
+ * Uses and already uploaded file and sends the go to all the selected clients.
+ */
+router.post("/re-upload", (req, res) => {
+  const group = req.body.group;
+  const version = req.body.version;
+
+  console.log(req.body);
+
+  sendToClients(group, version)
+
+
+  res.json({message: "DONE!"})
+});
+
+/**
  * Upload a file and sends the go to all the selected clients.
  */
 router.post("/upload", upload.single("file"), (req, res) => {
@@ -66,19 +99,6 @@ router.post("/upload", upload.single("file"), (req, res) => {
 
 
   sendToClients(group, version)
-
-  res.json({message: "DONE!"})
-});
-
-/**
- * Uses and already uploaded file and sends the go to all the selected clients.
- */
-router.post("/re-upload", (req, res) => {
-  const group = req.body.group;
-  const version = req.body.version;
-
-  sendToClients(group, version)
-
 
   res.json({message: "DONE!"})
 });
