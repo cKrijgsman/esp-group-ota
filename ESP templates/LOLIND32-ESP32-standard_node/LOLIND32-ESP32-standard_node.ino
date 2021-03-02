@@ -10,14 +10,16 @@
 #define SECRET_PASS   "r76Jfaxnhtje"
 //server setup
 #define SERVER_ID     "192.168.178.73"  // Set your correct hostname
-#define SERVER_PATH   "/file/%s"            // Set the URI to the .bin firmware
-#define SERVER_PORT   3000                    // Commonly 80 (HTTP) | 443 (HTTPS)
-#define UDP_BROADCAST_PORT  41234           // broadcast port number
-#define UDP_LISNEN_PORT     41222           // command receiving port
+#define SERVER_PATH   "/file/%s"        // Set the URI to the .bin firmware
+#define SERVER_PORT   3000              // Commonly 80 (HTTP) | 443 (HTTPS)
+#define UDP_BROADCAST_PORT  41234       // broadcast port number
+#define UDP_LISNEN_PORT     41222       // command receiving port
 
 char *NODE_NAME = "MrOwl";
 char *NODE_GROUP = "Birds";
 char *NODE_VERSION = SCRIPT_VERSION;
+
+TaskHandle_t OTPcontrol;
 
 String UPDATE_FILE;
 
@@ -47,6 +49,9 @@ void setup() {
     Serial.print("Sketch version ");
     Serial.println(NODE_VERSION);
 
+    xTaskCreatePinnedToCore(OTPcontrolcode, "OTPcontrol", 10000, NULL, 1, &OTPcontrol, 0);
+    /* Task function,  name of task, Stack size of task, parameter of the task, priority of the task, Task handle to keep track of created task, pin task to core 0*/
+
     //config TimerChekWiFi//
     /* Use 1st timer of 4 */
     /* 1 tick takes 1/(80MHZ/40000) = 500us so we set divider 40000 and count up */
@@ -55,7 +60,7 @@ void setup() {
     /* Attach TimerChekWiFi function to timer0 */
     timerAttachInterrupt(timer0, &TimerChekWiFi, true);
 
-    /* Set alarm to call onTimer function every 5 min 1 tick is 500us
+    /* Set alarm to call onTimer function every 5 sec, 1 tick is 500us
     => 1 second is 2000us */
     /* Repeat the alarm (third parameter) */
     timerAlarmWrite(timer0, 10000, true);
@@ -65,18 +70,19 @@ void setup() {
     Serial.println("start TimerChekWiFi");
 
 
-
     //------------------------------------------ non OTA setup code --------------------------
+
+
 
 }
 
-void loop() {
+void OTPcontrolcode( void * pvParameters ) {
 
     if (ChekWiFiEnable == true) {
         if ((WiFi.status() != WL_CONNECTED) && (CheckWiFiPossibility() == true)) {
             ConnectToWiFi();
             //timerAlarmEnable(timer1);
-            if(udp.listen(UDP_LISNEN_PORT)) {
+            if (udp.listen(UDP_LISNEN_PORT)) {
 
                 Serial.print("UDP Listening on IP: ");
                 Serial.println(WiFi.localIP());
@@ -85,9 +91,9 @@ void loop() {
                     Serial.write(packet.data(), packet.length());
                     Serial.println();
 
-                    char* DATA = (char*) packet.data();
+                    char *DATA = (char *) packet.data();
                     String data_string = String(DATA);
-                    if (data_string.substring(0,3)=="go|"){
+                    if (data_string.substring(0, 3) == "go|") {
                         UPDATE_FILE = data_string.substring(3);
                         Serial.println(UPDATE_FILE);
                         handleSketchDownload();
@@ -100,11 +106,6 @@ void loop() {
             broadcastToServer();
         }
     }
-
-    Serial.print(" \n . ");
-    delay(1000);
-
-    // add your normal loop code below ...
 
 }
 
@@ -244,4 +245,13 @@ bool ConnectToWiFi() {
     Serial.println(WiFi.localIP());
     return true;
 }
+
+void loop() {
+//------------------------------------------ non OTA loop code will run on core 1--------------------------
+
+
+
+}
+
+
 
