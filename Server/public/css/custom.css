@@ -1,0 +1,21 @@
+.dot {
+    height: 25px;
+    width: 25px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    overflow: hidden;
+    font-size: 0px;
+}
+
+.client-active {
+    background-color: #3bbc3b;
+}
+
+.client-disabled {
+    background-color: #a22626;
+}
+
+.dt-center {
+    text-align: center;
+}

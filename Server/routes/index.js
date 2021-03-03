@@ -23,6 +23,10 @@ router.get("/clients", ((req, res) => {
   res.json(boards)
 }))
 
+router.get("/client-list", ((req, res) => {
+  res.json(Object.entries(boards).map(([key, value]) => Object.assign(value, {mac: key})))
+}))
+
 router.post("/name", ((req, res) => {
   const client = req.body.client;
   const name = req.body.name;
