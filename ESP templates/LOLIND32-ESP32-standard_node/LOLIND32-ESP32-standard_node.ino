@@ -28,35 +28,24 @@
    These are the Default values changing them has no effect.
 */
 String NODE_NAME = "Caspar";
+// Group ID. (max 255)
 byte  NODE_GROUP = 1;
-// Version of the code. (max 255)
-String NODE_VERSION = "V1.0";
-
+String NODE_VERSION = "V1.6";
 TaskHandle_t OTPcontrol;
-
 String UPDATE_FILE;
 String serverIP;
-
 const char MY_SSID[] = SECRET_SSID;
 const char MY_PASS[] = SECRET_PASS;
-
 bool ChekWiFiEnable = false;
 bool downloading = false;
 
-//creating a timer
-hw_timer_t *timer0 = NULL;
-//hw_timer_t * timer1 = NULL;
 
 WiFiClient wifiClient;  // HTTP
 int status = WL_IDLE_STATUS;
 AsyncUDP udp;
 
-//TimerChekWiFi interrupt
-void IRAM_ATTR TimerChekWiFi() {
-  ChekWiFiEnable = true;
-}
 
-byte getEE(int pos, int def){
+byte getEE(int pos, int def) {
   byte val = EEPROM.read(pos);
   if (val == 255) return def;
   return val;
@@ -67,7 +56,7 @@ void read_id() {
   // reading name byte-by-byte from EEPROM
   String newName;
   for (int i = FLASH_START; i < FLASH_START + 64; i++) {
-    byte readValue = getEE(i,0);
+    byte readValue = getEE(i, 0);
     newName += String(char(readValue));
     Serial.print(String(char(readValue)));
     if (readValue == 0) {
@@ -77,7 +66,7 @@ void read_id() {
   Serial.println("");
   NODE_NAME = newName.c_str();
   // reading group (default is 0)
-  NODE_GROUP = getEE(FLASH_START + 64,0);
+  NODE_GROUP = getEE(FLASH_START + 64, 0);
 }
 
 void setup() {
@@ -92,25 +81,8 @@ void setup() {
     delay(1000000);
   }
 
-    xTaskCreatePinnedToCore(OTPcontrolcode, "OTPcontrol", 10000, NULL, 1, &OTPcontrol, 0);
-    /* Task function,  name of task, Stack size of task, parameter of the task, priority of the task, Task handle to keep track of created task, pin task to core 0*/
-
-    //config TimerChekWiFi//
-    /* Use 1st timer of 4 */
-    /* 1 tick takes 1/(80MHZ/40000) = 500us so we set divider 40000 and count up */
-    timer0 = timerBegin(0, 40000, true);
-
-  /* Attach TimerChekWiFi function to timer0 */
-  timerAttachInterrupt(timer0, &TimerChekWiFi, true);
-
-    /* Set alarm to call onTimer function every 5 sec, 1 tick is 500us
-    => 1 second is 2000us */
-  /* Repeat the alarm (third parameter) */
-  timerAlarmWrite(timer0, 10000, true);
-
-  /* Start an alarm */
-  timerAlarmEnable(timer0);
-  Serial.println("start TimerChekWiFi");
+  xTaskCreatePinnedToCore(OTPcontrolcode, "OTPcontrol", 10000, NULL, 1, &OTPcontrol, 0);
+  /* Task function,  name of task, Stack size of task, parameter of the task, priority of the task, Task handle to keep track of created task, pin task to core 0*/
 
   read_id();
   //------------------------------------------ non OTA setup code --------------------------
@@ -120,12 +92,12 @@ void setup() {
 }
 
 void OTPcontrolcode( void * pvParameters ) {
+  for (;;) {
 
-    if (ChekWiFiEnable == true) {
-        if ((WiFi.status() != WL_CONNECTED) && (CheckWiFiPossibility() == true)) {
-            ConnectToWiFi();
-            //timerAlarmEnable(timer1);
-            if(udp.listen(UDP_LISNEN_PORT)) {
+    if ((WiFi.status() != WL_CONNECTED) && (CheckWiFiPossibility() == true)) {
+      ConnectToWiFi();
+      //timerAlarmEnable(timer1);
+      if (udp.listen(UDP_LISNEN_PORT)) {
 
         Serial.print("UDP Listening on IP: ");
         Serial.println(WiFi.localIP());
@@ -193,26 +165,14 @@ void OTPcontrolcode( void * pvParameters ) {
       }
       broadcastToServer();
     }
-  }
 
+    delay(4000);
+  }
 }
 
 void broadcastToServer() {
   byte mac[6];
   WiFi.macAddress(mac);
-  // print MAC address
-  /*Serial.print("MAC: ");
-    Serial.print(mac[5], HEX);
-    Serial.print(":");
-    Serial.print(mac[4], HEX);
-    Serial.print(":");
-    Serial.print(mac[3], HEX);
-    Serial.print(":");
-    Serial.print(mac[2], HEX);
-    Serial.print(":");
-    Serial.print(mac[1], HEX);
-    Serial.print(":");
-    Serial.println(mac[0], HEX);*/
   //udp broadcast on port
   String builtString =
     String(mac[5]) + ":" + String(mac[4]) + ":" + String(mac[3]) + ":" + String(mac[2]) + ":" + String(mac[1]) +
@@ -234,6 +194,8 @@ void handleSketchDownload() {
   previousMillis = currentMillis;
 
   HttpClient client(wifiClient, SERVER, PORT);  // HTTP
+
+  client.setTimeout(30000);
 
   char buff[32];
   snprintf(buff, sizeof(buff), PATH, UPDATE_FILE);
@@ -337,11 +299,7 @@ bool ConnectToWiFi() {
 }
 
 void loop() {
-//------------------------------------------ non OTA loop code will run on core 1--------------------------
-
-
-
+  //------------------------------------------ non OTA loop code will run on core 1--------------------------
+  Serial.println("Just printing and waiting!");
+  delay(1000);
 }
-
-
-
