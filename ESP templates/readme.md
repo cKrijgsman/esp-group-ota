@@ -1,4 +1,4 @@
-#ESP32 templates
+# ESP32 templates
 
 In this folder resides two Arduino projects that are group-OTA enabled. In the folder `LOLIND32-ESP32-standard_node`,
 one can find the empty templated that only consists of the OTA code with no other behaviour.

@@ -1,6 +1,6 @@
-#OTA SERVER
+# OTA SERVER
 
-#prerequisites
+# prerequisites
 This server runs on Node.js 1.12 and above. To run and install it, you will need both node and npm.
 To install these, check out the website of node.js. https://nodejs.org/en/. \
 For aditional suport check out https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm.
