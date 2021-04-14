@@ -1,5 +1,7 @@
 let groups = [];
 
+let alertCounter = 0;
+
 (async function ($) {
     "use strict"; // Start of use strict
 
@@ -55,20 +57,30 @@ let groups = [];
         e.preventDefault();
     })
 
-    // Check for clients
-    $("#reloadClients").on("click", async () => {
-        const clients = await getClients();
+    const webSocket = new WebSocket("ws://localhost:8080")
 
-        updateViews(clients);
-    })
+    webSocket.onmessage = (message) => {
 
+        const temp = String(message.data)
+        // We got boards
+        if(temp.substr(0,2) === "B|"){
+            const data = JSON.parse(temp.substr(2))
+            const clients = data.Boards
+            const groups = data.Groups
+            updateViews(clients,undefined,undefined,groups)
+        }
+
+        //We got Alerts
+        if(temp.substr(0,2) === "A|"){
+            const alerts = JSON.parse(temp.substr(2))
+            updateViews(undefined,undefined,alerts,undefined)
+        }
+    }
 
     // Get the client list on page load.
-    const clients = await getClients();
     const files = await getFiles();
-    const alerts = await getAlerts();
 
-    updateViews(clients, files, alerts);
+    updateViews(undefined, files, []);
 })(jQuery); // End of use strict
 
 /**
@@ -107,8 +119,6 @@ function updateGroups(clients) {
         return self.indexOf(group) === pos
     })
 
-    console.log(newGroups);
-
     // Check if there was an update in the groups
     if (groups.length !== newGroups.length) {
         updated = true
@@ -135,11 +145,12 @@ function updateGroups(clients) {
 
 /**
  * Updates the client list view.
- * @param clients - List of clients that is present.
+ * @param clients - Object of clients that is present.
  * @param files - The list of previously uploaded files.
  * @param alerts - The alerts generated on the server.
+ * @param groups - Object containing all the groups
  */
-function updateViews(clients, files, alerts) {
+function updateViews(clients, files, alerts, groups) {
 
     // Update the Client views
     if (typeof clients !== "undefined") {
@@ -205,6 +216,55 @@ function updateViews(clients, files, alerts) {
         updateGroups(clients);
     }
 
+    // Update the Client views
+    if (typeof groups !== "undefined") {
+        const groupsDiv = $("#groupList");
+
+        groupsDiv.html("");
+
+
+        for (let [key, value] of Object.entries(groups)) {
+            const nameField = $(`<h4>${value.name}</h4>`)
+            // Set name handler
+            nameField.on('click', (e) => {
+                const name = prompt("Provide group Name", "")
+                if (!name || name === "")
+                    return ;
+
+                fetch("/api/group-name", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        group: key
+                    })
+                }).then(response => response.json()).then(data => {
+                        if (data.message === "DONE!") {
+                            nameField.text(name)
+                        }
+                    }
+                )
+
+                e.preventDefault()
+            })
+            groupsDiv.append(nameField)
+            const groupBox = $(`
+                <div>
+                    <b>Group ID:</b> ${key} | <b>Current Version:</b> ${value.version} <br>
+                    <b>Boards in group:</b> ${Object.values(value.boards).length}
+                </div>
+            `)
+            groupsDiv.append(groupBox)
+
+
+        }
+
+        // Update the Group views
+        updateGroups(clients);
+    }
+
     // Update the Re-Upload file list
     if (typeof files !== "undefined") {
         const fileSelect = $("#fileSelect")
@@ -218,6 +278,16 @@ function updateViews(clients, files, alerts) {
     }
 
     if (typeof alerts !== "undefined") {
+        const counter = $("#alertCounter")
+
+        alertCounter += alerts.length
+
+        if (alertCounter > 0) {
+            counter.text(alertCounter)
+        }else {
+            counter.text("")
+        }
+
         const alertBox = $("#alertBox")
         for (let a of alerts) {
             console.log(a);
@@ -242,14 +312,17 @@ function updateViews(clients, files, alerts) {
             </div>`)
 
             element.on("click", () => {
-                fetch('/api/remove-alert', {
-                    method: 'POST',
-                    body: JSON.stringify({alertId: a.id})
-                })
                 element.remove();
+                alertCounter--;
+                if (alertCounter > 0) {
+                    counter.text(alertCounter)
+                }else {
+                    counter.text("")
+                }
             });
 
             alertBox.append(element)
         }
+
     }
 }

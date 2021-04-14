@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {sendGo, boards, alerts, clearAlert, setName, setGroup} = require('../OTA/server')
+const {sendGo, boards, setName, setGroup, setGroupName} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -36,6 +36,15 @@ router.post("/name", ((req, res) => {
   res.send("Name set")
 }))
 
+router.post("/group-name", ((req, res) => {
+  const group = req.body.group;
+  const name = req.body.name;
+
+  setGroupName(group, name);
+
+  res.json({message: "DONE!"})
+}))
+
 router.post("/group", ((req, res) => {
   const client = req.body.client;
   const group = req.body.group;
@@ -59,25 +68,6 @@ router.get("/files", ((req, res) => {
   })
 }))
 
-/**
- * Send the alerts to the client.
- */
-router.get("/alerts", ((req, res) => {
-  const newAlerts = []
-  for (let i = 0; i < alerts.length; i++) {
-    newAlerts.push(alerts[i])
-  }
-
-  res.json(newAlerts);
-}))
-
-router.post("/remove-alert", (req, res) => {
-  const alertId = req.body.alertId;
-
-  clearAlert(alertId);
-
-  res.send("alert removed.")
-})
 
 /**
  * Uses and already uploaded file and sends the go to all the selected clients.

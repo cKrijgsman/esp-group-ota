@@ -1,16 +1,24 @@
 const dgram = require("dgram")
-const client = dgram.createSocket('udp4');
-const storage = require('node-persist');
+const client = dgram.createSocket('udp4')
+const WebSocket = require('ws');
+const storage = require('node-persist')
+const Alert = require("./Alert")
+const Board = require("./Board")
+const Group = require("./Group")
 
 
 /**
  * A Board is a representation of an ESP board
  * Every board is keyed on the mac address.
  *
- * @type {{ }}
+ * @type {{Board}}
  */
 let boards = {};
-let alerts = [];
+/**
+ * Holds all the Groups.
+ * @type {{Group}}
+ */
+let groups = {};
 
 const CLIENTS_PORT = 41222;
 
@@ -40,6 +48,11 @@ function setName(address,name) {
         if (err)
             console.error(err)
     })
+}
+
+function setGroupName(groupID, name) {
+    groups[groupID].name = name;
+    sendAlert(new Alert(Alert.GROUPNAME, `Group with ID ${groupID} renamed to ${name}`))
 }
 
 function setGroup(address,groupID) {
@@ -73,66 +86,84 @@ client.on('message', (msg, rinfo) => {
     if (msg.indexOf("|") !== -1) {
         const data = msg.toString().split("|")
         const mac = data[0].split(":").map((x) => Number(x).toString(16)).join(":");
-        const name = data[1];
+        const name = (data[1] === "")?"No-Name":data[1];
         const group = data[2];
-        const version = data[3];
+        const version = (data[3] === "")?"No-Version":data[3];
 
-        const alert = {
-            id: `${name}-${Date.now()}`,
-            message: "",
-            time: Date.now(),
-            type: "new"
+        let updated = false;
+
+        // Check if group exists
+        if (typeof groups[group] === "undefined") {
+            // Create new group
+            groups[group] = new Group(group, `group-${group}`, version)
+            updated = true;
         }
 
-        // Update alert message
+        // Check if the board exits
         if (typeof boards[mac] === "undefined") {
-            alert.message = `${name} just connected`
+            // Create new board
+            boards[mac] = new Board(mac, group, version, name)
+            // Add to group
+            groups[group].addBoard(boards[mac])
+            // Create board joined alert
+            sendAlert(new Alert(Alert.JOINED, `${name} just joined`))
+            updated = true;
         } else {
-            if (group !== boards[mac].group || version !== boards[mac].version) {
-                alert.message = `${name} was updated.`;
-                alert.type = "update";
+            const board = boards[mac];
+
+            // update time stamp
+            boards[mac].lastActiveTime = Date.now();
+
+            // If the board does exist check if it updated
+            // Name updated
+            if (name !== board.name) {
+                sendAlert(new Alert( Alert.UPDATE, `${board.name} is now named ${name}`))
+                board.name = name;
+                updated = true;
             }
-            if (name !== boards[mac].name) {
-                alert.message = `${mac} updated his name from ${boards[mac].name} to ${name}`
-                alert.type = "update";
+            // Group updated
+            if (group !== board.group) {
+                sendAlert(new Alert( Alert.UPDATE, `${name} is now in group ${groups[group].name}`))
+                // Remove from old group
+                groups[board.group].remove(board);
+                // Assign to new group
+                board.group = group;
+                groups[group].addBoard(board);
+                updated = true;
             }
-            if (rinfo.address !== boards[mac].address) {
-                alert.message = `${name} switched from ${boards[mac].address} to ${rinfo.address}.`
-                alert.type = "update";
+            // Version updated
+            if (version !== board.version) {
+                sendAlert(new Alert( Alert.UPDATE, `${name} is now on version ${version}`))
+                board.version = version
+                updated = true;
+            }
+            // Ip updated
+            if (rinfo.address !== board.address) {
+                sendAlert(new Alert( Alert.UPDATE, `${name} now has address ${rinfo.address}`))
+                board.address = rinfo.address
+                updated = true;
             }
         }
+
+
 
         // Check if we stole the ip of an existing client.
         for (let [key, value] of Object.entries(boards)) {
+            // Skip the current client
             if (key === mac)
                 continue;
 
             // Check if there was an other client with this IP
             if (value.address === rinfo.address) {
-                // add alert
-                const a = {
-                    message: `${name} has claimed the ip of ${value.name}. ${value.name} must have disconnected!`,
-                    time: Date.now(),
-                    type: "warning"
-                }
-                alerts.push(a);
+                sendAlert(new Alert(Alert.WARNING, `${name} has claimed the ip of ${value.name}. ${value.name} must have disconnected!`))
                 // remove old client
-                delete boards[mac];
+                delete boards[key];
+                updated = true;
             }
         }
 
-        boards[mac] = {
-            name: name,
-            group: group,
-            version: version,
-            address: rinfo.address,
-            port: rinfo.port,
-            life: Date.now()
-        }
-
-        if (alert.message !== "") {
-            alerts.push(alert)
-        }
+        if (updated)
+            updateClients();
     }
 
     if (String(msg) === "Polo") {
@@ -144,7 +175,7 @@ client.on('message', (msg, rinfo) => {
             sendIdentify(rinfo.address)
         } else {
             // Update time of life.
-            matches[0].life = Date.now();
+            matches[0].lastActiveTime = Date.now();
         }
     }
 });
@@ -181,4 +212,63 @@ client.on('listening', async () => {
 
 client.bind(41234);
 
-module.exports = {sendGo, boards, alerts, clearAlert, setName, setGroup};
+// -------------------------------------------------------------------
+// Websocket stuff
+const wss = new WebSocket.Server({ port: 8080 });
+const clients = {};
+
+let counter = 0;
+
+wss.on('connection', function connection(ws) {
+    ws.ID = counter
+    counter++
+
+    ws.on('message', function incoming(message) {
+        console.log('received: %s', message);
+    });
+
+    clients[ws.ID] = ws
+
+    ws.on('close', function () {
+        delete clients[ws.ID]
+    })
+
+    setTimeout(() => {
+        ws.send("B|" + JSON.stringify({
+            Boards: boards,
+            Groups: groups
+        }))
+    },1000)
+
+});
+
+const alertBacklog = []
+
+function sendAlert(alert) {
+    if(Object.values(clients).length === 0)
+        return alertBacklog.push(alert)
+
+    let alerts = []
+
+    if (alert)
+        alerts.push(alert)
+
+    while (alertBacklog.length > 0) {
+        alerts.push(alertBacklog)
+    }
+
+    for (const client of Object.values(clients)) {
+        client.send("A|" + JSON.stringify(alerts))
+    }
+}
+
+function updateClients() {
+    for (const client of Object.values(clients)) {
+        client.send("B|" + JSON.stringify({
+            Boards: boards,
+            Groups: groups
+        }))
+    }
+}
+
+module.exports = {sendGo, boards, groups,clearAlert, setName, setGroup, setGroupName};
