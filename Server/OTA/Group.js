@@ -29,6 +29,14 @@ class Group {
             delete this.boards[board.mac]
         }
     }
+
+    export() {
+        return {
+            id: this.id,
+            name: this.name,
+            version: this.version
+        }
+    }
 }
 
 module.exports = Group

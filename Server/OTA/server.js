@@ -43,8 +43,8 @@ function sendIdentify(address) {
     })
 }
 
-function setName(address,name) {
-    client.send(Buffer.from(`nm|${name.toString().substr(0,64)}`), CLIENTS_PORT, address, (err) => {
+function setName(address, name) {
+    client.send(Buffer.from(`nm|${name.toString().substr(0, 64)}`), CLIENTS_PORT, address, (err) => {
         if (err)
             console.error(err)
     })
@@ -53,13 +53,22 @@ function setName(address,name) {
 function setGroupName(groupID, name) {
     groups[groupID].name = name;
     sendAlert(new Alert(Alert.GROUPNAME, `Group with ID ${groupID} renamed to ${name}`))
+    saveGroups();
 }
 
-function setGroup(address,groupID) {
+function setGroup(address, groupID) {
     client.send(Buffer.from(`g|${Number(groupID) % 255}`), CLIENTS_PORT, address, (err) => {
         if (err)
             console.error(err)
     })
+}
+
+function saveGroups() {
+    let tempGroups = {}
+    Object.keys(groups).map(key => {
+        tempGroups[key] = groups[key].export()
+    })
+    storage.setItem('groups', tempGroups)
 }
 
 /**
@@ -86,9 +95,9 @@ client.on('message', (msg, rinfo) => {
     if (msg.indexOf("|") !== -1) {
         const data = msg.toString().split("|")
         const mac = data[0].split(":").map((x) => Number(x).toString(16)).join(":");
-        const name = (data[1] === "")?"No-Name":data[1];
+        const name = (data[1] === "") ? "No-Name" : data[1];
         const group = data[2];
-        const version = (data[3] === "")?"No-Version":data[3];
+        const version = (data[3] === "") ? "No-Version" : data[3];
 
         let updated = false;
 
@@ -96,6 +105,7 @@ client.on('message', (msg, rinfo) => {
         if (typeof groups[group] === "undefined") {
             // Create new group
             groups[group] = new Group(group, `group-${group}`, version)
+            saveGroups();
             updated = true;
         }
 
@@ -117,13 +127,13 @@ client.on('message', (msg, rinfo) => {
             // If the board does exist check if it updated
             // Name updated
             if (name !== board.name) {
-                sendAlert(new Alert( Alert.UPDATE, `${board.name} is now named ${name}`))
+                sendAlert(new Alert(Alert.UPDATE, `${board.name} is now named ${name}`))
                 board.name = name;
                 updated = true;
             }
             // Group updated
             if (group !== board.group) {
-                sendAlert(new Alert( Alert.UPDATE, `${name} is now in group ${groups[group].name}`))
+                sendAlert(new Alert(Alert.UPDATE, `${name} is now in group ${groups[group].name}`))
                 // Remove from old group
                 groups[board.group].remove(board);
                 // Assign to new group
@@ -133,18 +143,17 @@ client.on('message', (msg, rinfo) => {
             }
             // Version updated
             if (version !== board.version) {
-                sendAlert(new Alert( Alert.UPDATE, `${name} is now on version ${version}`))
+                sendAlert(new Alert(Alert.UPDATE, `${name} is now on version ${version}`))
                 board.version = version
                 updated = true;
             }
             // Ip updated
             if (rinfo.address !== board.address) {
-                sendAlert(new Alert( Alert.UPDATE, `${name} now has address ${rinfo.address}`))
+                sendAlert(new Alert(Alert.UPDATE, `${name} now has address ${rinfo.address}`))
                 board.address = rinfo.address
                 updated = true;
             }
         }
-
 
 
         // Check if we stole the ip of an existing client.
@@ -193,10 +202,13 @@ client.on('listening', async () => {
         forgiveParseErrors: false
     });
 
-    // Load known Boards
-    const b = await storage.getItem('boards')
-    if (b) {
-        boards = b
+    // Load known Groups
+    const g = await storage.getItem('groups')
+    if (g) {
+        for (const key of Object.keys(g)) {
+            const group = g[key]
+            groups[key] = new Group(group.id, group.name, group.version)
+        }
     }
 
     // Announce that the server is awake
@@ -214,7 +226,7 @@ client.bind(41234);
 
 // -------------------------------------------------------------------
 // Websocket stuff
-const wss = new WebSocket.Server({ port: 8080 });
+const wss = new WebSocket.Server({port: 8080});
 const clients = {};
 
 let counter = 0;
@@ -238,14 +250,14 @@ wss.on('connection', function connection(ws) {
             Boards: boards,
             Groups: groups
         }))
-    },1000)
+    }, 1000)
 
 });
 
 const alertBacklog = []
 
 function sendAlert(alert) {
-    if(Object.values(clients).length === 0)
+    if (Object.values(clients).length === 0)
         return alertBacklog.push(alert)
 
     let alerts = []
@@ -271,4 +283,4 @@ function updateClients() {
     }
 }
 
-module.exports = {sendGo, boards, groups,clearAlert, setName, setGroup, setGroupName};
+module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName};
