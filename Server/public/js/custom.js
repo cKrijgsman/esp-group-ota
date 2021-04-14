@@ -1,42 +1,50 @@
-let groups = [];
+let groups = {};
 
 let alertCounter = 0;
 
 (async function ($) {
     "use strict"; // Start of use strict
 
+    $("#file").on("change", function () {
+        const fileName = $(this).val().split(/([\\/])/g).pop().replace(".ino.d32.bin","")
+        const nameInput = $("#versionName")
+        if (!nameInput.val() || nameInput.val().length === 0) {
+            nameInput.val(fileName)
+        }
+    })
+
     $("#startUpload").on("click", (e) => {
         const data = new FormData();
         const version = $("#versionName").val()
-        const g = $("#groupSelect").val();
 
         data.append("file", document.getElementById("file").files[0], version);
-        data.append("group", g)
-        data.append("version", version)
 
-        if (g.length === 0) {
-            return;
-        }
 
         fetch('/api/upload', {
             method: 'POST',
             body: data
         }).then(res => res.json())
             .then(data => {
-                console.log(data)
+                // Clear fields
                 document.getElementById("file").value = "";
+                $("#versionName").val("")
+
+                // Show success message
+                showSuccess("uploadMessageBox", `sketch added with name: ${data.fileName}`)
             })
 
         // Stop submit action
         e.preventDefault();
     })
 
-    $("#start-re-upload").on("click", (e) => {
+    //TODO rework
+    $("#set-version").on("click", (e) => {
 
-        const g = $("#groupSelectReUpload").val();
-        const v = $("#fileSelect").val()
+        const groupID = $("#groupSelect").val();
+        const version = $("#fileSelect").val()
 
-        if (g.length === 0) {
+        //TODO Error display
+        if (groupID.length === 0) {
             return;
         }
 
@@ -47,10 +55,11 @@ let alertCounter = 0;
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                group: g,
-                version: v
+                group: groupID,
+                version: version
             })
         }).then(res => res.json())
+            // TODO Handle response
             .then(data => console.log(data))
 
         // Stop submit action
@@ -75,12 +84,13 @@ let alertCounter = 0;
             const alerts = JSON.parse(temp.substr(2))
             updateViews(undefined,undefined,alerts,undefined)
         }
+
+        //We got Files
+        if(temp.substr(0,2) === "F|"){
+            const files = JSON.parse(temp.substr(2))
+            updateViews(undefined,files.reverse(),undefined,undefined)
+        }
     }
-
-    // Get the client list on page load.
-    const files = await getFiles();
-
-    updateViews(undefined, files, []);
 })(jQuery); // End of use strict
 
 /**
@@ -108,39 +118,27 @@ async function getAlerts() {
     return res.json();
 }
 
+
+function showSuccess(divId,message) {
+    const container = $(`#${divId}`)
+    container.addClass("success")
+    container.text(message)
+    container.fadeIn();
+    setTimeout(() => {
+        container.fadeOut()
+    },5000)
+}
+
 /**
  * Updates the selection view for picking groups to upload to.
- * @param clients - List of clients that is present.
+ * @param groups - List of clients that is present.
  */
-function updateGroups(clients) {
-    let updated = false;
-
-    const newGroups = Object.values(clients).map(x => x.group).filter((group, pos, self) => {
-        return self.indexOf(group) === pos
-    })
-
-    // Check if there was an update in the groups
-    if (groups.length !== newGroups.length) {
-        updated = true
-    } else {
-        for (let group of newGroups) {
-            if (groups.includes(group))
-                continue;
-            updated = true;
-        }
-    }
-
-    groups = newGroups;
-
-    if (updated) {
-        const groupSelect = $("#groupSelect,#groupSelectReUpload")
+function updateGroups(groups) {
+        const groupSelect = $("#groupSelect")
         groupSelect.html("")
-        groupSelect.append("<option value='all'>all</option>")
-        for (let group of groups) {
-            groupSelect.append(`<option value="${group}">${group}</option>`)
+        for (let group of Object.values(groups)) {
+            groupSelect.append(`<option value="${group.id}">${group.name}</option>`)
         }
-    }
-
 }
 
 /**
@@ -211,9 +209,6 @@ function updateViews(clients, files, alerts, groups) {
 
 
         }
-
-        // Update the Group views
-        updateGroups(clients);
     }
 
     // Update the Client views
@@ -262,7 +257,7 @@ function updateViews(clients, files, alerts, groups) {
         }
 
         // Update the Group views
-        updateGroups(clients);
+        updateGroups(groups);
     }
 
     // Update the Re-Upload file list

@@ -1,6 +1,7 @@
 const dgram = require("dgram")
 const client = dgram.createSocket('udp4')
 const WebSocket = require('ws');
+const fs = require("fs");
 const storage = require('node-persist')
 const Alert = require("./Alert")
 const Board = require("./Board")
@@ -250,6 +251,13 @@ wss.on('connection', function connection(ws) {
             Boards: boards,
             Groups: groups
         }))
+        fs.readdir(`${__dirname}/../files/`, (err, files) => {
+            if (err) {
+                console.error(err)
+                return
+            }
+            ws.send("F|" + JSON.stringify(files))
+        })
     }, 1000)
 
 });
@@ -283,4 +291,16 @@ function updateClients() {
     }
 }
 
-module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName};
+function updateFileList() {
+    fs.readdir(`${__dirname}/../files/`, (err, files) => {
+        if (err) {
+            console.error(err)
+            return
+        }
+        for (const client of Object.values(clients)) {
+            client.send("F|" + JSON.stringify(files))
+        }
+    })
+}
+
+module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList};

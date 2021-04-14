@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {sendGo, boards, setName, setGroup, setGroupName} = require('../OTA/server')
+const {sendGo, boards, setName, setGroup, setGroupName, updateFileList} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -9,11 +9,20 @@ const storage = multer.diskStorage({
     cb(null, './files')
   },
   filename: function (req, file, cb) {
-    cb(null, file.originalname + ".bin")
+    const name = getName("./files/",file.originalname)
+    req.newFileName = name;
+    cb(null, name + ".bin")
   }
 })
 
 const upload = multer({storage: storage})
+
+function getName(folder, filename, increment = 0){
+  if (fs.existsSync(`${folder}${filename}${increment?increment:""}.bin`)) {
+    return getName(folder, filename, ++increment)
+  }
+  return `${filename}${increment?increment:""}`
+}
 
 
 /**
@@ -21,10 +30,6 @@ const upload = multer({storage: storage})
  */
 router.get("/clients", ((req, res) => {
   res.json(boards)
-}))
-
-router.get("/client-list", ((req, res) => {
-  res.json(Object.entries(boards).map(([key, value]) => Object.assign(value, {mac: key})))
 }))
 
 router.post("/name", ((req, res) => {
@@ -55,21 +60,6 @@ router.post("/group", ((req, res) => {
 }))
 
 /**
- * Returns a list of al the previously uploaded files.
- */
-router.get("/files", ((req, res) => {
-  fs.readdir(`${__dirname}/../files/`, (err, files) => {
-    if (err) {
-      console.error(err)
-      res.status(500);
-      res.send("Error reading dir")
-    }
-    res.json(files)
-  })
-}))
-
-
-/**
  * Uses and already uploaded file and sends the go to all the selected clients.
  */
 router.post("/re-upload", (req, res) => {
@@ -88,13 +78,10 @@ router.post("/re-upload", (req, res) => {
  * Upload a file and sends the go to all the selected clients.
  */
 router.post("/upload", upload.single("file"), (req, res) => {
-  const group = req.body.group;
-  const version = req.body.version;
+  const fileName = req.newFileName;
 
-
-  sendToClients(group, version)
-
-  res.json({message: "DONE!"})
+  res.json({fileName: fileName});
+  updateFileList();
 });
 
 /**

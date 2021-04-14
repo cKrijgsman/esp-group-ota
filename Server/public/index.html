@@ -19,6 +19,7 @@
 
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
 
 </head>
 
@@ -167,26 +168,23 @@
                         <!-- Upload new version -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Upload</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">Upload new version</h6>
                             </div>
                             <div class="card-body">
                                 <form>
                                     <div class="form-group">
-                                        <label for="groupSelect">Group to upload</label>
-                                        <select multiple required class="form-control" id="groupSelect">
-                                            <option value="all"> all </option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="file">Example file input</label>
+                                        <label for="file">Select compiled sketch to prepare for upload</label>
                                         <input type="file" required class="form-control-file" id="file">
                                     </div>
                                     <div class="form-group">
-                                        <label for="versionName">Version/File Name</label>
+                                        <label for="versionName">sketch Version Name</label>
                                         <input type="text" required class="form-control" id="versionName" placeholder="version name">
                                     </div>
-                                    <button type="button" id="startUpload" class="btn btn-primary">Upload</button>
+                                    <button type="button" id="startUpload" class="btn btn-primary">Prepare</button>
                                 </form>
+                                <div id="uploadMessageBox" style="display: none" class="message-box">
+                                    This is a test
+                                </div>
                             </div>
                         </div>
 
@@ -211,22 +209,25 @@
                         <!-- Re-Upload version -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Re Upload</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">Assign Version to Group</h6>
                             </div>
                             <div class="card-body">
                                 <form>
                                     <div class="form-group">
-                                        <label for="groupSelectReUpload">Group to upload</label>
-                                        <select multiple required class="form-control" id="groupSelectReUpload">
-                                            <option value="all"> all </option>
+                                        <label for="groupSelect">Select a Group(s)</label>
+                                        <select multiple required class="form-control" id="groupSelect">
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="fileSelect">Group to upload</label>
+                                        <label for="fileSelect">Select the Version for this group</label>
                                         <select required class="form-control" id="fileSelect">
                                         </select>
                                     </div>
-                                    <button type="button" id="start-re-upload" class="btn btn-primary">Upload</button>
+                                    <div class="form-check">
+                                        <input checked type="checkbox" class="form-check-input" id="autoUpload">
+                                        <label class="form-check-label" for="autoUpload">Immediately update all clients</label>
+                                    </div>
+                                    <button type="button" id="set-version" class="btn btn-primary">Set version</button>
                                 </form>
                             </div>
                         </div>
