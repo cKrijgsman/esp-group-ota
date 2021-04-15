@@ -2,7 +2,8 @@
 
 
 //server setup (Only change if you know what you are doing)
-#define SERVER_PATH   "/api/file/%s"        // Set the URI to the .bin firmware
+//#define SERVER_PATH   "/api/file/%s"        // Set the URI to the .bin firmware
+#define SERVER_PATH   "/api/file/"        // Set the URI to the .bin firmware
 #define SERVER_PORT   3000                  // Commonly 80 (HTTP) | 443 (HTTPS)
 #define UDP_BROADCAST_PORT  41234           // broadcast port number
 #define UDP_LISNEN_PORT     41222           // command receiving port
@@ -114,7 +115,11 @@ void OTPcontrolcode( void * pvParameters ) {
           // Go command
           if (data_string.substring(0, 3) == "go|") {
             // Max file name size is 191 chars due to ROM limitation.
-            UPDATE_FILE = data_string.substring(3, 194);
+            UPDATE_FILE = data_string.substring(3,packet.length());
+            if (UPDATE_FILE.length() > 191) {
+              Serial.println("File name was to large!");
+              UPDATE_FILE = UPDATE_FILE.substring(0,191);
+            }
             Serial.println(UPDATE_FILE);
             handleSketchDownload();
           }
@@ -202,14 +207,16 @@ void handleSketchDownload() {
 
   client.setTimeout(30000);
 
-  char buff[32];
-  snprintf(buff, sizeof(buff), PATH, UPDATE_FILE);
+//  char buff[64];
+//  snprintf(buff, sizeof(buff), PATH, UPDATE_FILE.c_str());
+
+  String url = String(PATH) + UPDATE_FILE;
 
   Serial.print("Check for update file ");
-  Serial.println(buff);
+  Serial.println(url);
 
   // Make the GET request
-  client.get(buff);
+  client.get(url.c_str());
 
   int statusCode = client.responseStatusCode();
   Serial.print("Update status code: ");
@@ -256,19 +263,17 @@ void handleSketchDownload() {
 
   Serial.println("Sketch update apply and reset.");
   Serial.flush();
-  // TODO save new version to ROM.
   // writing byte-by-byte to EEPROM
   for (int i = FLASH_START + 65; i < FLASH_START + 65 + UPDATE_FILE.length(); i++) {
-    EEPROM.write(i, byte(UPDATE_FILE.charAt(i - FLASH_START)));
+    EEPROM.write(i, byte(UPDATE_FILE.charAt(i - (FLASH_START + 65))));
   }
 
   // Add termination bit to the end.
   if (UPDATE_FILE.length() < 191) {
-    EEPROM.write(UPDATE_FILE.length(), byte(255));
+    EEPROM.write(FLASH_START + 65 + UPDATE_FILE.length(), byte(255));
   }
 
   EEPROM.commit();
-  read_id();
 
   InternalStorage.apply(); // this doesn't return
 }

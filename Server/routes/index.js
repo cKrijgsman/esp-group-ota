@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {sendGo, boards, setName, setGroup, setGroupName, updateFileList} = require('../OTA/server')
+const {sendGo, boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -62,16 +62,21 @@ router.post("/group", ((req, res) => {
 /**
  * Uses and already uploaded file and sends the go to all the selected clients.
  */
-router.post("/re-upload", (req, res) => {
-  const group = req.body.group;
+router.post("/set-group-version", (req, res) => {
+  const groupIds = req.body.group;
   const version = req.body.version;
+  const update = req.body.autoUpdate;
 
-  console.log(req.body);
+  // Set new versions for all the groups
+  for (const groupId of groupIds) {
+    if (typeof groups[groupId] !== "undefined") {
+      groups[groupId].setVersion(version,update)
+    }
+  }
 
-  sendToClients(group, version)
-
-
-  res.json({message: "DONE!"})
+  updateClients()
+  saveGroups()
+  res.json({message: "Group(s) successfully updated!"})
 });
 
 /**
@@ -83,22 +88,6 @@ router.post("/upload", upload.single("file"), (req, res) => {
   res.json({fileName: fileName});
   updateFileList();
 });
-
-/**
- * Sends the Go command to all the clients that fit the group list.
- * @param group - The groups to send the go to.
- * @param version - The clients that are connected.
- */
-function sendToClients(group, version) {
-  const groups = String(group).split(",");
-  const all = groups.includes("all");
-  for (let client of Object.values(boards)) {
-    if (all || groups.includes(client.group)) {
-      console.log(`Sending go to ${client.name}`)
-      sendGo(client.address, version)
-    }
-  }
-}
 
 /**
  * Get the file.

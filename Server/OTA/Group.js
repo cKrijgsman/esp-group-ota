@@ -7,6 +7,19 @@ class Group {
         this.boards = {}
     }
 
+    setVersion(version, autoUpdateBoards = false) {
+        this.version = version;
+
+        if (autoUpdateBoards)
+            this.updateBoards()
+    }
+
+    updateBoards() {
+        for (const board of Object.values(this.boards)) {
+            board.updateVersion(this.version)
+        }
+    }
+
     hasBoard(board) {
         return typeof this.boards[board.mac] !== "undefined"
     }

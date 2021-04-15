@@ -113,7 +113,7 @@ client.on('message', (msg, rinfo) => {
         // Check if the board exits
         if (typeof boards[mac] === "undefined") {
             // Create new board
-            boards[mac] = new Board(mac, group, version, name)
+            boards[mac] = new Board(mac, group, version, name, rinfo.address, client, CLIENTS_PORT)
             // Add to group
             groups[group].addBoard(boards[mac])
             // Create board joined alert
@@ -303,4 +303,4 @@ function updateFileList() {
     })
 }
 
-module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList};
+module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups};

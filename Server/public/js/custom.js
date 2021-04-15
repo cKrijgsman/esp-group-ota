@@ -42,25 +42,31 @@ let alertCounter = 0;
 
         const groupID = $("#groupSelect").val();
         const version = $("#fileSelect").val()
+        const update = $("#autoUpload:checked").val()
 
         //TODO Error display
         if (groupID.length === 0) {
+            showError("versionMessageBox", "No group was selected")
             return;
         }
 
 
-        fetch('/api/re-upload', {
+        fetch('/api/set-group-version', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 group: groupID,
-                version: version
+                version: version,
+                autoUpdate: update
             })
         }).then(res => res.json())
-            // TODO Handle response
-            .then(data => console.log(data))
+            .then(data => {
+                if(data.message) {
+                    showSuccess("versionMessageBox", data.message)
+                }
+            })
 
         // Stop submit action
         e.preventDefault();
@@ -122,6 +128,16 @@ async function getAlerts() {
 function showSuccess(divId,message) {
     const container = $(`#${divId}`)
     container.addClass("success")
+    container.text(message)
+    container.fadeIn();
+    setTimeout(() => {
+        container.fadeOut()
+    },5000)
+}
+
+function showError(divId,message) {
+    const container = $(`#${divId}`)
+    container.addClass("box-error")
     container.text(message)
     container.fadeIn();
     setTimeout(() => {
