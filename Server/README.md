@@ -6,6 +6,12 @@ To install these, check out the website of node.js. https://nodejs.org/en/. From
 The node Installation should include `npm`.
 For additional support check out https://docs.npmjs.com/downloading-and-installing-node-js-and-npm#using-a-node-installer-to-install-nodejs-and-npm.
 
+
+# Simple start
+If you have all the prerequisites then you should be able to just run the `start` file. For **Windows** this is `start.bat` and for **Mac and Linux** this is `start.sh`
+
+If this doesn't start the server then please check out the rest of this documentation.
+
 # Setup
 
 ## step 1
@@ -15,15 +21,15 @@ npm install
 ```
 You can ignore possible notices and warnings presented during the installation.
 
+On Windows it could be that this fails, if so it could be that you are missing the building tools essentials. \
+if this is the case, follow this tutorial to fix that https://www.npmjs.com/package/windows-build-tools
+
 ### How to open folder in terminal.
 #### Mac
 Open a new terminal. In this terminal type the following: `cd ` (don't forget the space after `cd`) then drag the folder from finder into the terminal.
 
 #### Windows
 In explorer hold shift while pressing right mouse button in a folder. Then from the menu select `Open `
-
-On Windows it could be that this fails, if so it could be that you are missing the building tools essentials. \
-if this is the case, follow this tutorial to fix that https://www.npmjs.com/package/windows-build-tools
 
 ## step 2
 Once everything is installed create a folder called `files` inside the server folder.

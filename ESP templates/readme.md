@@ -1,6 +1,6 @@
 # ESP32 templates
 
-In this folder resides two Arduino projects that are group-OTA enabled. In the folder `LOLIND32-ESP32-standard_node`,
+In this folder resides two Arduino projects that are group-OTA enabled. In the folder `ESP32-Template`,
 one can find the empty templated that only consists of the OTA code with no other behaviour.
 The `komorebi_larva_code` contains the Komorebi Larava behaviour combined with the OTA code.
 The version of the Komorebi behaviour in this code is from `09/01/21`.
@@ -34,3 +34,16 @@ The OTA code uses some flash memory to save states between reboots. Therefore, y
 ### Getting the code upload ready
 
 Once the code is done, and you want to upload it go to `Sketch > Export Compiled Binary` This will create a binary file inside your sketch directory.
+
+
+### Using the template
+The template in the `ESP32-Template` folder contains two files. The file named `OTA-code.ino` contains all the actual OTA code. If you want to use the OTA code in your own project then do the following
+
+- Place the `OTA-code.ino` file in the same folder as you project.
+- add all the imports that are in `ESP32-Template.ino` to you project.
+- In the setup of you project call the OTA setup.
+
+```
+otaSetup("MySSID","MyPassword",4000);
+```
+The `4000` indicates the delay between Wi-Fi checks in milliseconds

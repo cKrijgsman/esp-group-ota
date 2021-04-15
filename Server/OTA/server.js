@@ -194,7 +194,7 @@ client.on('message', (msg, rinfo) => {
 client.on('listening', async () => {
     // Start the storage modual
     await storage.init({
-        dir: '../resources/storage/',
+        dir: './resources/storage/',
         stringify: JSON.stringify,
         parse: JSON.parse,
         encoding: 'utf8',
@@ -215,7 +215,11 @@ client.on('listening', async () => {
 
     // Announce that the server is awake
     const address = client.address();
-    console.log(`server listening ${address.address}:${address.port}`);
+    console.log('server listening online!');
+    console.log('Web portal is available on: http://localhost:3000')
+    console.log(`Board connection on port ${address.port}`)
+    console.log('Websockets on port 8080')
+
 
     // Send the broadcast message.
     setInterval(function () {
