@@ -16,7 +16,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // User interface
-app.use('/', indexRouter);
+app.use('/api', indexRouter);
 
 
 

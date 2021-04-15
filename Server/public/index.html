@@ -19,6 +19,7 @@
 
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/custom.css" rel="stylesheet">
 
 </head>
 
@@ -48,6 +49,8 @@
                 <span>Home</span></a>
         </li>
 
+
+
         <!-- Divider -->
         <hr class="sidebar-divider">
 
@@ -58,17 +61,9 @@
 
         <!-- Nav Item - Pages Collapse Menu -->
         <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo"
-               aria-expanded="true" aria-controls="collapseTwo">
-                <i class="fas fa-fw fa-cog"></i>
-                <span>Groups</span>
-            </a>
-            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <h6 class="collapse-header">Group Settings:</h6>
-                    <a class="collapse-item" href="#">todo</a>
-                </div>
-            </div>
+            <a class="nav-link" href="clients.html">
+                <i class="fas fa-fw fa-table"></i>
+                <span>Clients</span></a>
         </li>
 
     </ul>
@@ -173,26 +168,23 @@
                         <!-- Upload new version -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Upload</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">Upload new version</h6>
                             </div>
                             <div class="card-body">
                                 <form>
                                     <div class="form-group">
-                                        <label for="groupSelect">Group to upload</label>
-                                        <select multiple required class="form-control" id="groupSelect">
-                                            <option value="all"> all </option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group">
-                                        <label for="file">Example file input</label>
+                                        <label for="file">Select compiled sketch to prepare for upload</label>
                                         <input type="file" required class="form-control-file" id="file">
                                     </div>
                                     <div class="form-group">
-                                        <label for="versionName">Version/File Name</label>
+                                        <label for="versionName">sketch Version Name</label>
                                         <input type="text" required class="form-control" id="versionName" placeholder="version name">
                                     </div>
-                                    <button type="button" id="startUpload" class="btn btn-primary">Upload</button>
+                                    <button type="button" id="startUpload" class="btn btn-primary">Prepare</button>
                                 </form>
+                                <div id="uploadMessageBox" style="display: none" class="message-box">
+                                    This is a test
+                                </div>
                             </div>
                         </div>
 
@@ -202,14 +194,10 @@
                         <!-- Approach -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                                <h6 class="m-0 font-weight-bold text-primary">Microcontroller list</h6>
-                                <div class="dropdown no-arrow">
-                                    <a class="dropdown-toggle" href="#" role="button" id="reloadClients">
-                                        <i class="fas fa-sync-alt fa-sm fa-fw text-gray-400"></i>
-                                    </a>
-                                </div>
+                                <h6 class="m-0 font-weight-bold text-primary">Group list</h6>
+
                             </div>
-                            <div class="card-body" id="clientList">
+                            <div class="card-body" id="groupList">
                             </div>
                         </div>
 
@@ -221,23 +209,41 @@
                         <!-- Re-Upload version -->
                         <div class="card shadow mb-4">
                             <div class="card-header py-3">
-                                <h6 class="m-0 font-weight-bold text-primary">Re Upload</h6>
+                                <h6 class="m-0 font-weight-bold text-primary">Assign Version to Group</h6>
                             </div>
                             <div class="card-body">
                                 <form>
                                     <div class="form-group">
-                                        <label for="groupSelect">Group to upload</label>
-                                        <select multiple required class="form-control" id="groupSelectReUpload">
-                                            <option value="all"> all </option>
+                                        <label for="groupSelect">Select a Group(s)</label>
+                                        <select multiple required class="form-control" id="groupSelect">
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label for="groupSelect">Group to upload</label>
+                                        <label for="fileSelect">Select the Version for this group</label>
                                         <select required class="form-control" id="fileSelect">
                                         </select>
                                     </div>
-                                    <button type="button" id="start-re-upload" class="btn btn-primary">Upload</button>
+                                    <div class="form-check">
+                                        <input checked type="checkbox" class="form-check-input" id="autoUpload">
+                                        <label class="form-check-label" for="autoUpload">Immediately update all clients</label>
+                                    </div>
+                                    <button type="button" id="set-version" class="btn btn-primary">Set version</button>
                                 </form>
+                                <div id="versionMessageBox" style="display: none" class="message-box">
+                                    This is a test
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="col-lg-6 mb-4">
+                        <!-- Approach -->
+                        <div class="card shadow mb-4">
+                            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                                <h6 class="m-0 font-weight-bold text-primary">Microcontroller list</h6>
+                            </div>
+                            <div class="card-body" id="clientList">
                             </div>
                         </div>
 
@@ -288,8 +294,8 @@
 <script src="vendor/chart.js/Chart.min.js"></script>
 
 <!-- Page level custom scripts -->
-<script src="js/demo/chart-area-demo.js"></script>
-<script src="js/demo/chart-pie-demo.js"></script>
+<!--<script src="js/demo/chart-area-demo.js"></script>-->
+<!--<script src="js/demo/chart-pie-demo.js"></script>-->
 
 
 
