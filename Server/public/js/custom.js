@@ -37,14 +37,13 @@ let alertCounter = 0;
         e.preventDefault();
     })
 
-    //TODO rework
+
     $("#set-version").on("click", (e) => {
 
         const groupID = $("#groupSelect").val();
         const version = $("#fileSelect").val()
         const update = $("#autoUpload:checked").val()
 
-        //TODO Error display
         if (groupID.length === 0) {
             showError("versionMessageBox", "No group was selected")
             return;
@@ -65,6 +64,11 @@ let alertCounter = 0;
             .then(data => {
                 if(data.message) {
                     showSuccess("versionMessageBox", data.message)
+
+                    // Set the groups that are being updated inactive
+                    for (const groupID of data.groupIds) {
+                        groupUpdating(groupID);
+                    }
                 }
             })
 
@@ -176,9 +180,40 @@ function updateViews(clients, files, alerts, groups) {
 
 
         for (let [key, value] of Object.entries(clients)) {
+            const container = $(`<div id="board-${key}" class="row"></div>`)
+            const leftColumn = $('<div class="col-9"></div>')
+            clientDiv.append(container)
+            container.append(leftColumn)
+
+
+
             const nameField = $(`<h4>${value.name}</h4>`)
+            leftColumn.append(nameField)
+            leftColumn.append(`<span class="tooltiptext">${key}</span>`)
+            const groupBox = $(`
+                <div>
+                    <b>Group:</b> ${value.group} | <b>Version:</b> ${value.version}
+                </div>
+            `)
+            leftColumn.append(groupBox)
+
+            const rightColumn = $('<div class="col-3"></div>')
+            container.append(rightColumn)
+
+            // Buttons
+            const rename = $(`<button type="button" class="btn btn-primary" style="font-size: smaller; margin-top: 5px ;margin-bottom: 10px">Rename Board</button>`)
+            const reGroup = $(`<button type="button" class="btn btn-primary" style="font-size: smaller">Change Group</button>`)
+
+            //set background on warning when board is offline
+            if (!value.online) {
+                container.css("background-color", "#cb3737")
+                reGroup.prop("disabled","true")
+                rename.prop("disabled","true")
+                container.css("color", "black")
+            }
+
             // Set name handler
-            nameField.on('click', (e) => {
+            rename.on('click', (e) => {
                 const name = prompt("Provide board Name", "Jhon")
                 if (!name)
                     return ;
@@ -196,14 +231,8 @@ function updateViews(clients, files, alerts, groups) {
 
                 e.preventDefault()
             })
-            clientDiv.append(nameField)
-            clientDiv.append(`<span class="tooltiptext">${key}</span>`)
-            const groupBox = $(`
-                <div>
-                    <b>Group:</b> ${value.group} | <b>Version:</b> ${value.version}
-                </div>
-            `)
-            groupBox.on('click', (e) => {
+
+            reGroup.on('click', (e) => {
                 const group = prompt("Provide group id between 1 and 255", "1")
                 if (!group)
                     return
@@ -221,8 +250,11 @@ function updateViews(clients, files, alerts, groups) {
 
                 e.preventDefault()
             })
-            clientDiv.append(groupBox)
 
+            rightColumn.append(rename)
+            rightColumn.append(reGroup)
+
+            clientDiv.append("<hr>")
 
         }
     }
@@ -235,9 +267,58 @@ function updateViews(clients, files, alerts, groups) {
 
 
         for (let [key, value] of Object.entries(groups)) {
+            const container = $(`<div id="group-${key}" class="row"></div>`)
+            const leftColumn = $('<div class="col-9"></div>')
+            groupsDiv.append(container)
+            container.append(leftColumn)
             const nameField = $(`<h4>${value.name}</h4>`)
+            leftColumn.append(nameField)
+
+            // Create board running different version text
+            let wrong = 0;
+            let offline = 0;
+            for (const board of Object.values(value.boards)) {
+                if (board.online && board.version !== value.version) {
+                    wrong++
+                }
+                if (!board.online) {
+                    offline++
+                }
+            }
+
+            let differentVersionLine = ""
+            if (wrong > 0) {
+                differentVersionLine = `<span style="color: black"><b>Boards running a different version:</b> ${wrong}</span>`
+                if (wrong > 2) {
+                    container.css("background-color", "#ffc676")
+                }
+            }
+            let offlineLine = ""
+            if (offline > 0) {
+                offlineLine = `<span style="color: black"><b>Boards offline:</b> ${offline}</span>`
+                if (offline > 2) {
+                    container.css("background-color", "#ff7676")
+                }
+            }
+
+            const groupBox = $(`
+                <div>
+                    <b>Group ID:</b> ${key} | <b>Current Version:</b> ${value.version} <br>
+                    <b>Boards in group:</b> ${Object.values(value.boards).length} <br>
+                    ${differentVersionLine}
+                    ${offlineLine}
+                </div>
+            `)
+            leftColumn.append(groupBox)
+            const rightColumn = $('<div class="col-3"></div>')
+            container.append(rightColumn)
+
+            // Buttons
+            const rename = $(`<button type="button" class="btn btn-primary" style="font-size: smaller; margin-top: 5px ;margin-bottom: 10px">Rename Group</button>`)
+            const updateBoards = $(`<button type="button" class="btn btn-primary" style="font-size: smaller">Update Boards</button>`)
+
             // Set name handler
-            nameField.on('click', (e) => {
+            rename.on('click', (e) => {
                 const name = prompt("Provide group Name", "")
                 if (!name || name === "")
                     return ;
@@ -254,21 +335,43 @@ function updateViews(clients, files, alerts, groups) {
                 }).then(response => response.json()).then(data => {
                         if (data.message === "DONE!") {
                             nameField.text(name)
+                            groups[key].name = name
+                            updateGroups(groups)
                         }
                     }
                 )
 
                 e.preventDefault()
             })
-            groupsDiv.append(nameField)
-            const groupBox = $(`
-                <div>
-                    <b>Group ID:</b> ${key} | <b>Current Version:</b> ${value.version} <br>
-                    <b>Boards in group:</b> ${Object.values(value.boards).length}
-                </div>
-            `)
-            groupsDiv.append(groupBox)
 
+            updateBoards.on('click', (e) => {
+                fetch('/api/set-group-version', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        group: key,
+                        version: value.version,
+                        autoUpdate: true
+                    })
+                }).then(res => res.json())
+                    .then(data => {
+                        if(data.message) {
+                            // Set the groups that are being updated inactive
+                            for (const groupID of data.groupIds) {
+                                groupUpdating(groupID);
+                            }
+                        }
+                    })
+
+                e.preventDefault()
+            })
+
+            rightColumn.append(rename)
+            rightColumn.append(updateBoards)
+
+            groupsDiv.append("<hr>")
 
         }
 
@@ -281,9 +384,9 @@ function updateViews(clients, files, alerts, groups) {
         const fileSelect = $("#fileSelect")
         fileSelect.html("");
         for (let file of files) {
-            if (String(file).indexOf(".bin") !== -1) {
-                file = String(file).split(".bin")[0];
-                fileSelect.append(`<option value="${file}">${file}</option>`)
+            if (String(file.file).indexOf(".bin") !== -1) {
+                file.file = String(file.file).split(".bin")[0];
+                fileSelect.append(`<option value="${file.file}">${file.file} - ${(new Date(file.time)).toLocaleTimeString().replace(/:\\d+ /, ' ')}</option>`)
             }
         }
     }
@@ -336,4 +439,21 @@ function updateViews(clients, files, alerts, groups) {
         }
 
     }
+}
+
+function groupUpdating(groupId) {
+    const groupContainer = $(`#group-${groupId}`)
+    const buttons = $(`#group-${groupId} > div > button`)
+
+    buttons.prop('disabled', true);
+    console.log("disabled!")
+    groupContainer.css("background-color","#e0e0e0")
+
+
+    // Re enable after 10 seconds
+    setTimeout(() => {
+        buttons.prop('disabled', false);
+        groupContainer.css("background-color","transparent")
+        console.log("enabled!")
+    }, 10000)
 }

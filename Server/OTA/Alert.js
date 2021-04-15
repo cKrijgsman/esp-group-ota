@@ -3,6 +3,8 @@ class Alert {
     static JOINED = "joined"
     static WARNING = "warning"
     static GROUPNAME = "groupName"
+    static OFFLINE = "offline"
+    static ONLINE = "online"
 
     constructor(type, message) {
         this.message = message

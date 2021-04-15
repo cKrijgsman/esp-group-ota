@@ -125,6 +125,7 @@ client.on('message', (msg, rinfo) => {
             // update time stamp
             boards[mac].lastActiveTime = Date.now();
 
+
             // If the board does exist check if it updated
             // Name updated
             if (name !== board.name) {
@@ -220,8 +221,26 @@ client.on('listening', async () => {
     setInterval(function () {
         client.setBroadcast(true);
         client.send(Buffer.from(`Marco`), 41222, "255.255.255.255");
+        setTimeout(checkAllBoards,1000)
     }, 10000)
 });
+
+function checkAllBoards() {
+    let change = false;
+    for (const board of Object.values(boards)) {
+        let alive = board.checkAlive()
+        if (alive === 0) {
+            change =true;
+            sendAlert(new Alert(Alert.OFFLINE, `${board.name} is now offline!`))
+        } else if (alive === 1) {
+            change=true
+            sendAlert(new Alert(Alert.ONLINE, `${board.name} is now back online!`))
+        }
+    }
+    if (change) {
+        updateClients()
+    }
+}
 
 client.bind(41234);
 
@@ -256,6 +275,12 @@ wss.on('connection', function connection(ws) {
                 console.error(err)
                 return
             }
+            files = files.map((file) => {
+                return {
+                    file: file,
+                    time : fs.statSync(`${__dirname}/../files/${file}`).ctime
+                }
+            })
             ws.send("F|" + JSON.stringify(files))
         })
     }, 1000)
@@ -297,6 +322,14 @@ function updateFileList() {
             console.error(err)
             return
         }
+        // add data to file
+        files = files.map((file) => {
+            return {
+                file: file,
+                time : fs.statSync(`${__dirname}/../files/${file}`).ctime
+            }
+        })
+
         for (const client of Object.values(clients)) {
             client.send("F|" + JSON.stringify(files))
         }

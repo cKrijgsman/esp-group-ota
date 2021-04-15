@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {sendGo, boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups} = require('../OTA/server')
+const {boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -67,16 +67,19 @@ router.post("/set-group-version", (req, res) => {
   const version = req.body.version;
   const update = req.body.autoUpdate;
 
+  const updated = [];
+
   // Set new versions for all the groups
   for (const groupId of groupIds) {
     if (typeof groups[groupId] !== "undefined") {
       groups[groupId].setVersion(version,update)
+      updated.push(groupId)
     }
   }
 
   updateClients()
   saveGroups()
-  res.json({message: "Group(s) successfully updated!"})
+  res.json({message: "Group(s) successfully updated!", groupIds: updated})
 });
 
 /**

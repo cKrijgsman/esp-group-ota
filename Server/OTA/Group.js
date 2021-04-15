@@ -16,7 +16,8 @@ class Group {
 
     updateBoards() {
         for (const board of Object.values(this.boards)) {
-            board.updateVersion(this.version)
+            if (board.online)
+                board.updateVersion(this.version)
         }
     }
 
