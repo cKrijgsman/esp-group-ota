@@ -18,10 +18,17 @@ const storage = multer.diskStorage({
 const upload = multer({storage: storage})
 
 function getName(folder, filename, increment = 0){
-  if (fs.existsSync(`${folder}${filename}${increment?increment:""}.bin`)) {
+  if (increment) {
+    if (fs.existsSync(`${folder}${filename}-${increment?increment:""}.bin`)) {
+      return getName(folder, filename, ++increment)
+    }
+    return `${filename}-${increment?increment:""}`
+  }
+  if (fs.existsSync(`${folder}${filename}.bin`)) {
     return getName(folder, filename, ++increment)
   }
-  return `${filename}${increment?increment:""}`
+  return `${filename}`
+
 }
 
 

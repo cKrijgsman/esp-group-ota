@@ -315,7 +315,7 @@ function updateViews(clients, files, alerts, groups) {
 
             // Buttons
             const rename = $(`<button type="button" class="btn btn-primary" style="font-size: smaller; margin-top: 5px ;margin-bottom: 10px">Rename Group</button>`)
-            const updateBoards = $(`<button type="button" class="btn btn-primary" style="font-size: smaller">Update Boards</button>`)
+            const updateBoards = $(`<button type="button" class="btn btn-primary" style="font-size: smaller">Upload to Boards</button>`)
 
             // Set name handler
             rename.on('click', (e) => {
@@ -435,7 +435,7 @@ function updateViews(clients, files, alerts, groups) {
                 }
             });
 
-            alertBox.append(element)
+            alertBox.prepend(element)
         }
 
     }
