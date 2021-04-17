@@ -340,4 +340,8 @@ function updateFileList() {
     })
 }
 
-module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups};
+function deleteGroup(groupId) {
+    delete groups[groupId];
+}
+
+module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup};

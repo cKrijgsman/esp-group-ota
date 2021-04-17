@@ -16,6 +16,10 @@
     background-color: #a22626;
 }
 
+.clickable {
+    cursor: pointer;
+}
+
 .dt-center {
     text-align: center;
 }

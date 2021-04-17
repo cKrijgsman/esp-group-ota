@@ -1,2 +1,2 @@
-npm i
-npm run start
+mkdir -p ./files
+npm i && npm run start

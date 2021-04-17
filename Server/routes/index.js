@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups} = require('../OTA/server')
+const {boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -87,6 +87,19 @@ router.post("/set-group-version", (req, res) => {
   updateClients()
   saveGroups()
   res.json({message: "Group(s) successfully updated!", groupIds: updated})
+});
+
+/**
+ * Uses and already uploaded file and sends the go to all the selected clients.
+ */
+router.post("/delete-group", (req, res) => {
+  const groupId = req.body.group;
+
+  deleteGroup(groupId)
+
+  updateClients()
+  saveGroups()
+  res.json({message: "Group deleted", groupId: groupId})
 });
 
 /**
