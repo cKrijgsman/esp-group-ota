@@ -44,6 +44,13 @@ class Group {
         }
     }
 
+    forAll(f, arg) {
+        for (const board of Object.values(this.boards)) {
+            if (board.online)
+                f(board,arg)
+        }
+    }
+
     export() {
         return {
             id: this.id,

@@ -293,6 +293,8 @@ function updateViews(clients, files, alerts, groups) {
       const rename = $(`<button type="button" class="btn btn-primary" style="margin-top: 5px ;margin-bottom: 10px">Rename Group</button>`)
       const updateBoards = $(`<button type="button" class="btn btn-primary" style="">Upload to Boards</button>`)
       const deleteButton = $(`<button type="button" class="btn btn-danger" style="">Delete group</button>`)
+      const onButton = $(`<button type="button" class="btn btn-success" style="">Turn On group</button>`)
+      const offButton = $(`<button type="button" class="btn btn-warning" style="">Turn Off group</button>`)
 
       // Set name handler
       rename.on('click', (e) => {
@@ -367,9 +369,53 @@ function updateViews(clients, files, alerts, groups) {
         e.preventDefault()
       })
 
+      onButton.on('click', (e) => {
+        fetch('/on-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            group: key,
+            state: "T"
+          })
+        }).then(res => res.json())
+            .then(data => {
+              if (data.message) {
+                // Set the groups that are being updated inactive
+                //TODO visualize on
+              }
+            })
+
+        e.preventDefault()
+      })
+
+      offButton.on('click', (e) => {
+        fetch('/on-status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            group: key,
+            state: "F"
+          })
+        }).then(res => res.json())
+            .then(data => {
+              if (data.message) {
+                // Set the groups that are being updated inactive
+                //TODO visualize off
+              }
+            })
+
+        e.preventDefault()
+      })
+
       rightColumn.append(rename)
       if (boardCount > 0) {
         rightColumn.append(updateBoards)
+        rightColumn.append(onButton)
+        rightColumn.append(offButton)
       } else {
         rightColumn.append(deleteButton)
       }

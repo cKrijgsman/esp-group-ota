@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup} = require('../OTA/server')
+const {boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup, sendStatus} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -65,6 +65,19 @@ router.post("/group", ((req, res) => {
 
   res.send("group set")
 }))
+
+router.post("/on-status", (req, res) => {
+  const groupId = req.body.group;
+  const state = req.body.state;
+
+  // Set new versions for all the groups
+
+    if (typeof groups[groupId] !== "undefined") {
+      groups[groupId].forAll(sendStatus, state)
+    }
+
+  res.json({message: `Group's on-state is now set to ${state}`})
+});
 
 /**
  * Uses and already uploaded file and sends the go to all the selected clients.

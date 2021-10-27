@@ -11,7 +11,7 @@ class Board {
      * @param {Socket} udpClient - the udp client to send message from
      * @param {number} udpPort
      */
-    constructor(mac, group, version, name, address, udpClient, udpPort) {
+    constructor(mac, group, version, name, address, udpClient, udpPort, StatusFunction) {
         this.address = address;
         this.mac = mac;
         this.group = group;
@@ -35,6 +35,10 @@ class Board {
                     console.error(err)
             })
         }
+    }
+
+    setState(state) {
+
     }
 
     checkAlive() {

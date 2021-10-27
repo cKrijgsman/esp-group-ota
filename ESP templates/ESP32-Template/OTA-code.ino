@@ -37,6 +37,8 @@ bool ChekWiFiEnable = false;
 bool downloading = false;
 long wifiCheckTimeout = 4000;
 
+bool on = true;
+
 WiFiClient wifiClient;  // HTTP
 AsyncUDP udp;
 
@@ -123,6 +125,7 @@ void OTPcontrolcode( void * pvParameters ) {
             Serial.println(UPDATE_FILE);
             handleSketchDownload();
           }
+          
           if (downloading) {
             return;
           }
@@ -159,6 +162,15 @@ void OTPcontrolcode( void * pvParameters ) {
             EEPROM.commit();
             read_id();
             broadcastToServer();
+          }
+          if (data_string.substring(0, 10) == "on-status|") {
+            // Max file name size is 191 chars due to ROM limitation.
+            String n = data_string.substring(10, 11);
+            if (n == "T") {
+              on = true;
+            } else if (n == "F") {
+              on = false;
+            }
           }
           // Set group
           if (data_string.substring(0, 2) == "g|") {

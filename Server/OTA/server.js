@@ -37,6 +37,18 @@ function sendGo(address, version) {
     })
 }
 
+/**
+ * Sets the on status of a board to true or false
+ * @param board
+ * @param state {boolean} to indicated the on status of the board
+ */
+function sendStatus(board, state) {
+    client.send(Buffer.from(`on-status|${state}`), CLIENTS_PORT, board.address, (err) => {
+        if (err)
+            console.error(err)
+    })
+}
+
 function sendIdentify(address) {
     client.send(Buffer.from(`Identify!`), CLIENTS_PORT, address, (err) => {
         if (err)
@@ -113,7 +125,7 @@ client.on('message', (msg, rinfo) => {
         // Check if the board exits
         if (typeof boards[mac] === "undefined") {
             // Create new board
-            boards[mac] = new Board(mac, group, version, name, rinfo.address, client, CLIENTS_PORT)
+            boards[mac] = new Board(mac, group, version, name, rinfo.address, client, CLIENTS_PORT, )
             // Add to group
             groups[group].addBoard(boards[mac])
             // Create board joined alert
@@ -344,4 +356,4 @@ function deleteGroup(groupId) {
     delete groups[groupId];
 }
 
-module.exports = {sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup};
+module.exports = {sendStatus, sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup};
