@@ -98,7 +98,7 @@ let alertCounter = 0;
     //We got Files
     if (temp.substr(0, 2) === "F|") {
       const files = JSON.parse(temp.substr(2))
-      updateViews(undefined, files.reverse(), undefined, undefined)
+      updateViews(undefined, files, undefined, undefined)
     }
   }
 })(jQuery); // End of use strict
@@ -455,10 +455,16 @@ function updateViews(clients, files, alerts, groups) {
   if (typeof files !== "undefined") {
     const fileSelect = $("#fileSelect")
     fileSelect.html("");
+    files.sort((f1, f2) => {
+      const d1 = new Date(f1.time)
+      const d2 = new Date(f2.time)
+      return d1 - d2
+    })
     for (let file of files) {
       if (String(file.file).indexOf(".bin") !== -1) {
         file.file = String(file.file).split(".bin")[0];
-        fileSelect.append(`<option value="${file.file}">${file.file} - ${(new Date(file.time)).toLocaleTimeString().replace(/:\\d+ /, ' ')}</option>`)
+        const d = new Date(file.time)
+        fileSelect.append(`<option value="${file.file}"> ${d.getUTCDate()}/${d.getUTCMonth() + 1}/${d.getUTCFullYear()} - ${d.toLocaleTimeString().replace(/:\\d+ /, ' ')} - ${file.file}</option>`)
       }
     }
   }
