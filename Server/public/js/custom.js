@@ -437,6 +437,7 @@ function updateViews(clients, files, alerts, groups) {
         rightColumn.append(updateBoards)
         rightColumn.append(onButton)
         rightColumn.append(offButton)
+        rightColumn.append(resetButton)
       } else {
         rightColumn.append(deleteButton)
       }
