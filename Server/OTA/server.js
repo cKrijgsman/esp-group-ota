@@ -49,6 +49,18 @@ function sendStatus(board, state) {
     })
 }
 
+/**
+ * Sets the on status of a board to true or false
+ * @param board
+ * @param state {boolean} to indicated the on status of the board
+ */
+function sendReset(board) {
+    client.send(Buffer.from(`reset`), CLIENTS_PORT, board.address, (err) => {
+        if (err)
+            console.error(err)
+    })
+}
+
 function sendIdentify(address) {
     client.send(Buffer.from(`Identify!`), CLIENTS_PORT, address, (err) => {
         if (err)
@@ -356,4 +368,4 @@ function deleteGroup(groupId) {
     delete groups[groupId];
 }
 
-module.exports = {sendStatus, sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup};
+module.exports = {sendReset, sendStatus, sendGo, boards, groups, clearAlert, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup};

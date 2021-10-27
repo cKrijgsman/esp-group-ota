@@ -292,9 +292,10 @@ function updateViews(clients, files, alerts, groups) {
       // Buttons
       const rename = $(`<button type="button" class="btn btn-primary" style="margin-top: 5px ;margin-bottom: 10px">Rename Group</button>`)
       const updateBoards = $(`<button type="button" class="btn btn-primary" style="">Upload to Boards</button>`)
-      const deleteButton = $(`<button type="button" class="btn btn-danger" style="">Delete group</button>`)
+      const deleteButton = $(`<button type="button" class="btn btn-danger" style="margin-top: 5px ;margin-bottom: 10px">Delete group</button>`)
       const onButton = $(`<button type="button" class="btn btn-success" style="">Turn On group</button>`)
-      const offButton = $(`<button type="button" class="btn btn-warning" style="">Turn Off group</button>`)
+      const offButton = $(`<button type="button" class="btn btn-warning" style="margin-top: 5px ;margin-bottom: 10px">Turn Off group</button>`)
+      const resetButton = $(`<button type="button" class="btn btn-primary" style="">Reset</button>`)
 
       // Set name handler
       rename.on('click', (e) => {
@@ -370,7 +371,7 @@ function updateViews(clients, files, alerts, groups) {
       })
 
       onButton.on('click', (e) => {
-        fetch('/on-status', {
+        fetch('/api/on-status', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -391,7 +392,7 @@ function updateViews(clients, files, alerts, groups) {
       })
 
       offButton.on('click', (e) => {
-        fetch('/on-status', {
+        fetch('/api/on-status', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -405,6 +406,26 @@ function updateViews(clients, files, alerts, groups) {
               if (data.message) {
                 // Set the groups that are being updated inactive
                 //TODO visualize off
+              }
+            })
+
+        e.preventDefault()
+      })
+
+      resetButton.on('click', (e) => {
+        fetch('/api/reset', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            group: key
+          })
+        }).then(res => res.json())
+            .then(data => {
+              if (data.message) {
+                // Set the groups that are being updated inactive
+                //TODO visualize this
               }
             })
 

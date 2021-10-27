@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const {boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup, sendStatus} = require('../OTA/server')
+const {boards, groups, setName, setGroup, setGroupName, updateFileList, updateClients, saveGroups, deleteGroup, sendStatus, sendReset} = require('../OTA/server')
 const multer = require("multer")
 const fs = require("fs")
 
@@ -75,6 +75,17 @@ router.post("/on-status", (req, res) => {
     if (typeof groups[groupId] !== "undefined") {
       groups[groupId].forAll(sendStatus, state)
     }
+
+  res.json({message: `Group's on-state is now set to ${state}`})
+});
+
+router.post("/reset", (req, res) => {
+  const groupId = req.body.group;
+
+  // Set new versions for all the groups
+  if (typeof groups[groupId] !== "undefined") {
+    groups[groupId].forAll(sendReset)
+  }
 
   res.json({message: `Group's on-state is now set to ${state}`})
 });
