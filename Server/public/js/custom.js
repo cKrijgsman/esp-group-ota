@@ -460,6 +460,7 @@ function updateViews(clients, files, alerts, groups) {
       const d2 = new Date(f2.time)
       return d1 - d2
     })
+    files.reverse()
     for (let file of files) {
       if (String(file.file).indexOf(".bin") !== -1) {
         file.file = String(file.file).split(".bin")[0];
