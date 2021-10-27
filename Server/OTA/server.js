@@ -306,7 +306,7 @@ wss.on('connection', function connection(ws) {
             files = files.map((file) => {
                 return {
                     file: file,
-                    time : fs.statSync(`${__dirname}/../files/${file}`).ctime
+                    time : fs.statSync(`${__dirname}/../files/${file}`).mtimeMs
                 }
             })
             ws.send("F|" + JSON.stringify(files))
