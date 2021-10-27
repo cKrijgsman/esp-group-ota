@@ -291,9 +291,9 @@ function updateViews(clients, files, alerts, groups) {
 
       // Buttons
       const rename = $(`<button type="button" class="btn btn-primary" style="margin-top: 5px ;margin-bottom: 10px">Rename Group</button>`)
-      const updateBoards = $(`<button type="button" class="btn btn-primary" style="">Upload to Boards</button>`)
+      const updateBoards = $(`<button type="button" class="btn btn-primary" style=" margin-top: 5px ;margin-bottom: 10px">Upload to Boards</button>`)
       const deleteButton = $(`<button type="button" class="btn btn-danger" style="margin-top: 5px ;margin-bottom: 10px">Delete group</button>`)
-      const onButton = $(`<button type="button" class="btn btn-success" style="">Turn On group</button>`)
+      const onButton = $(`<button type="button" class="btn btn-success" style="margin-top: 5px ;margin-bottom: 10px">Turn On group</button>`)
       const offButton = $(`<button type="button" class="btn btn-warning" style="margin-top: 5px ;margin-bottom: 10px">Turn Off group</button>`)
       const resetButton = $(`<button type="button" class="btn btn-primary" style="">Reset</button>`)
 
