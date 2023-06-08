@@ -338,7 +338,9 @@ function sendAlert(alert) {
     }
 
     for (const client of Object.values(clients)) {
-        client.send("A|" + JSON.stringify(alerts))
+        for (const a of alerts) {
+            client.send("A|" + JSON.stringify(a))
+        }
     }
 }
 
