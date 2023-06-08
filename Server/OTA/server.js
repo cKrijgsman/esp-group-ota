@@ -7,6 +7,8 @@ const Alert = require("./Alert")
 const Board = require("./Board")
 const Group = require("./Group")
 
+let pingInterval = null
+
 
 /**
  * A Board is a representation of an ESP board
@@ -244,9 +246,14 @@ client.on('listening', async () => {
     console.log(`Board connection on port ${address.port}`)
     console.log('Websockets on port 8080')
 
+    // Prevent infinite intervals
+    if (pingInterval !== null){
+        clearInterval(pingInterval)
+        pingInterval = null
+    }
 
     // Send the broadcast message.
-    setInterval(function () {
+    pingInterval = setInterval(function () {
         client.setBroadcast(true);
         client.send(Buffer.from(`Marco`), 41222, "255.255.255.255");
         setTimeout(checkAllBoards,1000)
