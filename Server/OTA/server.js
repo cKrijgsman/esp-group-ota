@@ -327,7 +327,7 @@ function sendAlert(alert) {
         alerts.push(alert)
 
     while (alertBacklog.length > 0) {
-        alerts.push(alertBacklog)
+        alerts.push(alertBacklog.pop())
     }
 
     for (const client of Object.values(clients)) {
