@@ -10,14 +10,18 @@ class Board {
      * @param address
      * @param {Socket} udpClient - the udp client to send message from
      * @param {number} udpPort
+	 * @param {string} ssid - SSID of the board
+     * @param {number} dbm - signal strength
      */
-    constructor(mac, group, version, name, address, udpClient, udpPort, StatusFunction) {
+    constructor(mac, group, version,ssid,dbm, name, address, udpClient, udpPort, StatusFunction) {
         this.address = address;
         this.mac = mac;
         this.group = group;
         this.version = version;
+        this.ssid = ssid;
+        this.dbm = dbm
         this.name = name;
-
+		
         this.udpClient = udpClient
         this.udpPort = udpPort;
 

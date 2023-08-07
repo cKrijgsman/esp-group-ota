@@ -117,7 +117,7 @@ client.on('error', (err) => {
 client.on('message', (msg, rinfo) => {
     if (String(msg) !== "Polo")
         console.log(`server got: ${msg} from ${rinfo.address}:${rinfo.port}`);
-
+  
     // register new board
     if (msg.indexOf("|") !== -1) {
         const data = msg.toString().split("|")
@@ -125,7 +125,9 @@ client.on('message', (msg, rinfo) => {
         const name = (data[1] === "") ? "No-Name" : data[1];
         const group = data[2];
         const version = (data[3] === "") ? "No-Version" : data[3];
-
+		const ssid = (data[4] === "") ? "No-SSID" : data[4];
+        const dbm = (data[5] === "") ? "No signal strength" : data[5];
+        
         let updated = false;
 
         // Check if group exists
@@ -139,7 +141,7 @@ client.on('message', (msg, rinfo) => {
         // Check if the board exits
         if (typeof boards[mac] === "undefined") {
             // Create new board
-            boards[mac] = new Board(mac, group, version, name, rinfo.address, client, CLIENTS_PORT, )
+            boards[mac] = new Board(mac, group, version,ssid,dbm, name, rinfo.address, client, CLIENTS_PORT)
             // Add to group
             groups[group].addBoard(boards[mac])
             // Create board joined alert
@@ -181,6 +183,21 @@ client.on('message', (msg, rinfo) => {
                 board.address = rinfo.address
                 updated = true;
             }
+            
+            // WIFI SSID UPDATED
+            if (ssid !== board.ssid) {
+                sendAlert(new Alert(Alert.UPDATE, `${name} now has ssid ${ssid}`))
+                board.ssid = ssid
+                updated = true;
+            }
+
+            // WIFI Signal Strength UPDATED
+            if (dbm !== board.dbm) {
+                  //  sendAlert(new Alert(Alert.UPDATE, `${name} now has ssid ${ssid}`))
+                    board.dbm = dbm
+                    updated = true;
+                }
+
         }
 
 
