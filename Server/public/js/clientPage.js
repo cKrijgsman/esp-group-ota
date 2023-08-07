@@ -33,7 +33,9 @@ $(document).ready(function () {
                 } },
             {"data": "version"},
             {"data": "address"},
-            {"data": "mac"}
+            {"data": "mac"},
+			{"data": "ssid"},
+            {"data": "dbm"}
         ]
     });
 
